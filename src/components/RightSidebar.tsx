@@ -2,8 +2,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, PenTool } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const RightSidebar = () => {
+  const { data: tags } = useQuery({
+    queryKey: ["public-tags"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tags").select("*").order("name");
+      return data || [];
+    },
+  });
+
+  const { data: divisions } = useQuery({
+    queryKey: ["public-divisions"],
+    queryFn: async () => {
+      const { data } = await supabase.from("divisions").select("*").order("bn_name");
+      return data || [];
+    },
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ["public-categories"],
+    queryFn: async () => {
+      const { data } = await supabase.from("categories").select("*").order("sort_order");
+      return data || [];
+    },
+  });
+
   return (
     <div className="space-y-4">
       {/* People & Writers Tabs */}
@@ -53,22 +80,53 @@ const RightSidebar = () => {
         </CardContent>
       </Card>
 
-      {/* Map placeholder */}
+      {/* Map + Labels + Tags */}
       <Card className="news-card">
         <CardHeader className="pb-2">
-          <CardTitle className="section-title text-base !mb-0">ম্যাপ</CardTitle>
+          <CardTitle className="section-title text-base !mb-0">🗺️ ম্যাপ</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <div className="aspect-video bg-muted rounded-md flex items-center justify-center text-sm text-muted-foreground">
-            🗺️ বাংলাদেশ ম্যাপ (শীঘ্রই আসছে)
+            🗺️ বাংলাদেশ ম্যাপ
           </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {["ঢাকা", "চট্টগ্রাম", "রাজশাহী", "সিলেট", "খুলনা"].map(tag => (
-              <span key={tag} className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                {tag}
-              </span>
-            ))}
+
+          {/* Divisions */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">বিভাগ</p>
+            <div className="flex flex-wrap gap-1.5">
+              {divisions?.map((d) => (
+                <Badge key={d.id} variant="outline" className="text-xs cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
+                  {d.bn_name}
+                </Badge>
+              ))}
+            </div>
           </div>
+
+          {/* Labels */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">লেবেল</p>
+            <div className="flex flex-wrap gap-1.5">
+              {categories?.map((cat) => (
+                <Badge key={cat.id} variant="secondary" className="text-xs cursor-pointer">
+                  {cat.icon} {cat.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          {tags && tags.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">ট্যাগ</p>
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <Badge key={tag.id} variant="outline" className="text-xs bg-accent/30 cursor-pointer hover:bg-accent transition-colors">
+                    #{tag.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

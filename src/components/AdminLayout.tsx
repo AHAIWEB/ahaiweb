@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X,
+  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -13,6 +13,7 @@ const navItems = [
   { label: "URL পোস্ট", icon: Link2, path: "/admin/url-post" },
   { label: "এডিটর পোস্ট", icon: FileText, path: "/admin/editor-post" },
   { label: "মিডিয়া", icon: Image, path: "/admin/media" },
+  { label: "ট্যাগ ও ম্যাপ", icon: Tag, path: "/admin/tags" },
 ];
 
 const AdminLayout = () => {
