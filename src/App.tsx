@@ -35,6 +35,7 @@ const App = () => (
               <Route path="url-post" element={<UrlPost />} />
               <Route path="editor-post" element={<EditorPost />} />
               <Route path="media" element={<MediaManager />} />
+              <Route path="tags" element={<TagManager />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
