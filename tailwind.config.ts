@@ -1,6 +1,14 @@
 import type { Config } from "tailwindcss";
 
 export default {
+  theme: {
+    extend: {
+      fontFamily: {
+        bengali: ['"Noto Sans Bengali"', 'sans-serif'],
+        display: ['"Playfair Display"', '"Noto Sans Bengali"', 'serif'],
+      },
+    },
+  },
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
