@@ -44,6 +44,53 @@ export type Database = {
         }
         Relationships: []
       }
+      districts: {
+        Row: {
+          bn_name: string
+          division_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          bn_name: string
+          division_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          bn_name?: string
+          division_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "districts_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      divisions: {
+        Row: {
+          bn_name: string
+          id: string
+          name: string
+        }
+        Insert: {
+          bn_name: string
+          id?: string
+          name: string
+        }
+        Update: {
+          bn_name?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       media: {
         Row: {
           caption: string | null
@@ -84,6 +131,102 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_locations: {
+        Row: {
+          district_id: string | null
+          division_id: string | null
+          id: string
+          post_id: string
+          union_id: string | null
+          upazila_id: string | null
+        }
+        Insert: {
+          district_id?: string | null
+          division_id?: string | null
+          id?: string
+          post_id: string
+          union_id?: string | null
+          upazila_id?: string | null
+        }
+        Update: {
+          district_id?: string | null
+          division_id?: string | null
+          id?: string
+          post_id?: string
+          union_id?: string | null
+          upazila_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_locations_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_locations_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_locations_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_locations_union_id_fkey"
+            columns: ["union_id"]
+            isOneToOne: false
+            referencedRelation: "unions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_locations_upazila_id_fkey"
+            columns: ["upazila_id"]
+            isOneToOne: false
+            referencedRelation: "upazilas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_tags: {
+        Row: {
+          id: string
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -194,6 +337,148 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      tag_locations: {
+        Row: {
+          district_id: string | null
+          division_id: string | null
+          id: string
+          tag_id: string
+          union_id: string | null
+          upazila_id: string | null
+        }
+        Insert: {
+          district_id?: string | null
+          division_id?: string | null
+          id?: string
+          tag_id: string
+          union_id?: string | null
+          upazila_id?: string | null
+        }
+        Update: {
+          district_id?: string | null
+          division_id?: string | null
+          id?: string
+          tag_id?: string
+          union_id?: string | null
+          upazila_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_locations_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_locations_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_locations_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_locations_union_id_fkey"
+            columns: ["union_id"]
+            isOneToOne: false
+            referencedRelation: "unions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_locations_upazila_id_fkey"
+            columns: ["upazila_id"]
+            isOneToOne: false
+            referencedRelation: "upazilas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      unions: {
+        Row: {
+          bn_name: string
+          id: string
+          name: string
+          upazila_id: string
+        }
+        Insert: {
+          bn_name: string
+          id?: string
+          name: string
+          upazila_id: string
+        }
+        Update: {
+          bn_name?: string
+          id?: string
+          name?: string
+          upazila_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unions_upazila_id_fkey"
+            columns: ["upazila_id"]
+            isOneToOne: false
+            referencedRelation: "upazilas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      upazilas: {
+        Row: {
+          bn_name: string
+          district_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          bn_name: string
+          district_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          bn_name?: string
+          district_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upazilas_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
