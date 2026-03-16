@@ -56,8 +56,8 @@ const Header = () => {
       </div>
 
       {/* Category Nav */}
-      <nav className="max-w-7xl mx-auto px-4 pb-2 flex gap-1 overflow-x-auto text-sm">
-        {["হোম", "ভ্রমণ", "লেখালেখি", "সংবাদ", "ফ্যামিলি", "ফটো", "ভিডিও"].map((item, i) => (
+      <nav className="max-w-7xl mx-auto px-4 pb-2 flex gap-1 overflow-x-auto text-sm scrollbar-hide">
+        {["হোম", "আমার ক্যামেরা", "ভ্রমণ", "ফ্যামিলি", "লেখালেখি", "সংবাদ", "ভিডিও", "পিপল", "কলম", "ম্যাপ"].map((item, i) => (
           <Button
             key={item}
             variant={i === 0 ? "default" : "ghost"}
