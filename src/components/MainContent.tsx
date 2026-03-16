@@ -36,10 +36,16 @@ const samplePosts = [
 ];
 
 const labelColors: Record<string, string> = {
+  "আমার ক্যামেরা": "bg-amber-500/10 text-amber-700 border-amber-200",
   "ভ্রমণ": "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+  "ফ্যামিলি": "bg-rose-500/10 text-rose-700 border-rose-200",
   "লেখালেখি": "bg-violet-500/10 text-violet-700 border-violet-200",
   "সংবাদ": "bg-blue-500/10 text-blue-700 border-blue-200",
-  "ফ্যামিলি": "bg-rose-500/10 text-rose-700 border-rose-200",
+  "ভিডিও": "bg-red-500/10 text-red-700 border-red-200",
+  "পিপল": "bg-cyan-500/10 text-cyan-700 border-cyan-200",
+  "কলম": "bg-indigo-500/10 text-indigo-700 border-indigo-200",
+  "ম্যাপ": "bg-teal-500/10 text-teal-700 border-teal-200",
+  "এই দিনে": "bg-orange-500/10 text-orange-700 border-orange-200",
 };
 
 const MainContent = () => {
