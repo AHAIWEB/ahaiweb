@@ -344,7 +344,7 @@ const MainContent = () => {
               <TabsList className="w-full grid grid-cols-3 h-8">
                 <TabsTrigger value="দেশীয়" className="text-xs gap-1"><Newspaper className="h-3 w-3" /> দেশীয়</TabsTrigger>
                 <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1"><Globe className="h-3 w-3" /> আন্তর্জাতিক</TabsTrigger>
-                <TabsTrigger value="টেক" className="text-xs gap-1"><Radio className="h-3 w-3" /> টেক</TabsTrigger>
+                <TabsTrigger value="গ্রামের খবর" className="text-xs gap-1"><Radio className="h-3 w-3" /> গ্রামের খবর</TabsTrigger>
               </TabsList>
               {rssCategories.map((category) => (
                 <TabsContent key={category} value={category} className="mt-3 space-y-3">
