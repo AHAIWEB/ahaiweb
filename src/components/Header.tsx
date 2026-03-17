@@ -1,10 +1,13 @@
-import { Search, Bell, Moon, Sun, Menu } from "lucide-react";
+import { Search, Bell, Moon, Sun, Menu, Settings, LogIn, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
+  const { user } = useAuth();
 
   const toggleDark = () => {
     setIsDark(!isDark);
@@ -46,6 +49,15 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-1">
+          {user ? (
+            <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
+              <Link to="/admin"><Settings className="h-4 w-4" /> অ্যাডমিন</Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
+              <Link to="/login"><LogIn className="h-4 w-4" /> লগইন</Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-9 w-9">
             <Bell className="h-4 w-4" />
           </Button>
