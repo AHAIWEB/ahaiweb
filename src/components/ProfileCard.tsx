@@ -1,6 +1,15 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Globe, Calendar } from "lucide-react";
+import { MapPin, Globe, Calendar, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
+
+const socialLinks = [
+  { icon: Facebook, url: "https://facebook.com/ahaiweb", label: "Facebook" },
+  { icon: Twitter, url: "https://twitter.com/ahaiweb", label: "Twitter" },
+  { icon: Instagram, url: "https://instagram.com/ahaiweb", label: "Instagram" },
+  { icon: Youtube, url: "https://youtube.com/@ahaiweb", label: "YouTube" },
+  { icon: Linkedin, url: "https://linkedin.com/in/ahaiweb", label: "LinkedIn" },
+  { icon: Github, url: "https://github.com/ahaiweb", label: "GitHub" },
+];
 
 const ProfileCard = () => {
   return (
@@ -35,6 +44,22 @@ const ProfileCard = () => {
             <Calendar className="h-3.5 w-3.5 text-primary" />
             <span>যোগদান: ২০২৪</span>
           </div>
+        </div>
+
+        {/* Social Media Links */}
+        <div className="mt-4 flex justify-center gap-2 flex-wrap">
+          {socialLinks.map((social) => (
+            <a
+              key={social.label}
+              href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={social.label}
+              className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors text-muted-foreground"
+            >
+              <social.icon className="h-4 w-4" />
+            </a>
+          ))}
         </div>
 
         <div className="mt-4 flex justify-center gap-6 text-center">
