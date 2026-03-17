@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, MapPin, Tag, FolderOpen } from "lucide-react";
+import { X, MapPin, Tag, FolderOpen, Plus, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface PostTagLocationPickerProps {
   selectedTags: string[];
@@ -20,18 +22,16 @@ interface PostTagLocationPickerProps {
 }
 
 const PostTagLocationPicker = ({
-  selectedTags,
-  onTagsChange,
-  selectedCategories,
-  onCategoriesChange,
-  selectedDivision,
-  onDivisionChange,
-  selectedDistrict,
-  onDistrictChange,
-  selectedUpazila,
-  onUpazilaChange,
+  selectedTags, onTagsChange, selectedCategories, onCategoriesChange,
+  selectedDivision, onDivisionChange, selectedDistrict, onDistrictChange,
+  selectedUpazila, onUpazilaChange,
 }: PostTagLocationPickerProps) => {
-  const [tagInput, setTagInput] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [newTagName, setNewTagName] = useState("");
+  const [newCatName, setNewCatName] = useState("");
+  const [creatingTag, setCreatingTag] = useState(false);
+  const [creatingCat, setCreatingCat] = useState(false);
 
   const { data: tags } = useQuery({
     queryKey: ["tags"],
@@ -80,19 +80,49 @@ const PostTagLocationPicker = ({
   const addTag = (tagId: string) => {
     if (!selectedTags.includes(tagId)) onTagsChange([...selectedTags, tagId]);
   };
-
   const removeTag = (tagId: string) => onTagsChange(selectedTags.filter((t) => t !== tagId));
-
   const addCategory = (catId: string) => {
     if (!selectedCategories.includes(catId)) onCategoriesChange([...selectedCategories, catId]);
   };
-
   const removeCategory = (catId: string) => onCategoriesChange(selectedCategories.filter((c) => c !== catId));
 
-  const filteredTags = tags?.filter(
-    (t) => !selectedTags.includes(t.id) && (tagInput ? t.name.toLowerCase().includes(tagInput.toLowerCase()) : true)
-  );
+  const createNewTag = async () => {
+    if (!newTagName.trim()) return;
+    setCreatingTag(true);
+    try {
+      const slug = newTagName.trim().toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-");
+      const { data, error } = await supabase.from("tags").insert({ name: newTagName.trim(), slug }).select().single();
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
+      addTag(data.id);
+      setNewTagName("");
+      toast({ title: "ট্যাগ তৈরি হয়েছে!" });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setCreatingTag(false);
+    }
+  };
 
+  const createNewCategory = async () => {
+    if (!newCatName.trim()) return;
+    setCreatingCat(true);
+    try {
+      const slug = newCatName.trim().toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-");
+      const { data, error } = await supabase.from("categories").insert({ name: newCatName.trim(), slug }).select().single();
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      addCategory(data.id);
+      setNewCatName("");
+      toast({ title: "লেবেল তৈরি হয়েছে!" });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setCreatingCat(false);
+    }
+  };
+
+  const filteredTags = tags?.filter((t) => !selectedTags.includes(t.id));
   const filteredCategories = categories?.filter((c) => !selectedCategories.includes(c.id));
 
   return (
@@ -115,21 +145,28 @@ const PostTagLocationPicker = ({
             );
           })}
         </div>
-        <Select onValueChange={addCategory}>
-          <SelectTrigger>
-            <SelectValue placeholder="লেবেল যোগ করুন" />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredCategories?.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.icon} {cat.name}
-              </SelectItem>
-            ))}
-            {(!filteredCategories || filteredCategories.length === 0) && (
-              <div className="px-2 py-1.5 text-sm text-muted-foreground">কোনো লেবেল নেই</div>
-            )}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select onValueChange={addCategory}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="লেবেল যোগ করুন" />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredCategories?.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.icon} {cat.name}</SelectItem>
+              ))}
+              {(!filteredCategories || filteredCategories.length === 0) && (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">কোনো লেবেল নেই</div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Input placeholder="নতুন লেবেল নাম" value={newCatName} onChange={(e) => setNewCatName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && createNewCategory()} className="flex-1 h-8 text-xs" />
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={createNewCategory} disabled={creatingCat || !newCatName.trim()}>
+            {creatingCat ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />} যোগ
+          </Button>
+        </div>
       </div>
 
       {/* Tags */}
@@ -150,19 +187,28 @@ const PostTagLocationPicker = ({
             );
           })}
         </div>
-        <Select onValueChange={addTag}>
-          <SelectTrigger>
-            <SelectValue placeholder="ট্যাগ যোগ করুন" />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredTags?.map((tag) => (
-              <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>
-            ))}
-            {(!filteredTags || filteredTags.length === 0) && (
-              <div className="px-2 py-1.5 text-sm text-muted-foreground">কোনো ট্যাগ নেই</div>
-            )}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select onValueChange={addTag}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="ট্যাগ যোগ করুন" />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredTags?.map((tag) => (
+                <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>
+              ))}
+              {(!filteredTags || filteredTags.length === 0) && (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">কোনো ট্যাগ নেই</div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Input placeholder="নতুন ট্যাগ নাম" value={newTagName} onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && createNewTag()} className="flex-1 h-8 text-xs" />
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={createNewTag} disabled={creatingTag || !newTagName.trim()}>
+            {creatingTag ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />} যোগ
+          </Button>
+        </div>
       </div>
 
       {/* Location */}
@@ -174,37 +220,25 @@ const PostTagLocationPicker = ({
           <Select value={selectedDivision} onValueChange={(v) => { onDivisionChange(v); onDistrictChange(""); onUpazilaChange(""); }}>
             <SelectTrigger><SelectValue placeholder="বিভাগ" /></SelectTrigger>
             <SelectContent>
-              {divisions?.map((d) => (
-                <SelectItem key={d.id} value={d.id}>{d.bn_name}</SelectItem>
-              ))}
+              {divisions?.map((d) => <SelectItem key={d.id} value={d.id}>{d.bn_name}</SelectItem>)}
             </SelectContent>
           </Select>
-
           <Select value={selectedDistrict} onValueChange={(v) => { onDistrictChange(v); onUpazilaChange(""); }} disabled={!selectedDivision}>
             <SelectTrigger><SelectValue placeholder="জেলা" /></SelectTrigger>
             <SelectContent>
-              {districts?.map((d) => (
-                <SelectItem key={d.id} value={d.id}>{d.bn_name}</SelectItem>
-              ))}
+              {districts?.map((d) => <SelectItem key={d.id} value={d.id}>{d.bn_name}</SelectItem>)}
             </SelectContent>
           </Select>
-
           <Select value={selectedUpazila} onValueChange={onUpazilaChange} disabled={!selectedDistrict}>
             <SelectTrigger><SelectValue placeholder="উপজেলা" /></SelectTrigger>
             <SelectContent>
-              {upazilas?.map((u) => (
-                <SelectItem key={u.id} value={u.id}>{u.bn_name}</SelectItem>
-              ))}
+              {upazilas?.map((u) => <SelectItem key={u.id} value={u.id}>{u.bn_name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         {selectedDivision && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-1 text-xs h-6"
-            onClick={() => { onDivisionChange(""); onDistrictChange(""); onUpazilaChange(""); }}
-          >
+          <Button variant="ghost" size="sm" className="mt-1 text-xs h-6"
+            onClick={() => { onDivisionChange(""); onDistrictChange(""); onUpazilaChange(""); }}>
             <X className="h-3 w-3 mr-1" /> লোকেশন মুছুন
           </Button>
         )}
