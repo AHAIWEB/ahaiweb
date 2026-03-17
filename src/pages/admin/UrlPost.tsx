@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Link2 } from "lucide-react";
+import { Link2, Loader2 } from "lucide-react";
 
 const UrlPost = () => {
   const { user } = useAuth();
@@ -23,6 +23,7 @@ const UrlPost = () => {
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -31,6 +32,27 @@ const UrlPost = () => {
       return data || [];
     },
   });
+
+  const fetchMeta = async (url: string) => {
+    if (!url.startsWith("http")) return;
+    setFetching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-url-meta", {
+        body: { url },
+      });
+      if (!error && data) {
+        if (data.title && !title) setTitle(data.title);
+        if (data.image && !imageUrl) setImageUrl(data.image);
+        if (data.description && !content) setContent(data.description);
+        if (data.siteName && !sourceName) setSourceName(data.siteName);
+        toast({ title: "ফেচ সফল!", description: "মেটাডাটা আনা হয়েছে" });
+      }
+    } catch {
+      toast({ title: "ফেচ ব্যর্থ", variant: "destructive" });
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handleSubmit = async (status: "draft" | "published") => {
     if (!title.trim() || !sourceUrl.trim() || !user) return;
@@ -72,9 +94,31 @@ const UrlPost = () => {
 
       <Card>
         <CardContent className="p-5 space-y-4">
-          <Input placeholder="শিরোনাম" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <div className="flex gap-2">
+            <Input
+              placeholder="সোর্স URL (https://...)"
+              type="url"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={fetching || !sourceUrl.startsWith("http")}
+              onClick={() => fetchMeta(sourceUrl)}
+            >
+              {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "ফেচ"}
+            </Button>
+          </div>
 
-          <Input placeholder="সোর্স URL (https://...)" type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} />
+          {fetching && (
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" /> URL থেকে তথ্য আনা হচ্ছে...
+            </p>
+          )}
+
+          <Input placeholder="শিরোনাম" value={title} onChange={(e) => setTitle(e.target.value)} />
 
           <Input placeholder="সোর্সের নাম (যেমন: প্রথম আলো)" value={sourceName} onChange={(e) => setSourceName(e.target.value)} />
 
