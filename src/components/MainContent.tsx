@@ -410,61 +410,6 @@ const MainContent = () => {
         </Card>
       )}
 
-      {/* 📰 সংবাদ - Live RSS */}
-      <Card className="news-card">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="section-title text-base !mb-0">📰 সংবাদ (লাইভ)</CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchRss} disabled={rssLoading}>
-            <RefreshCw className={`h-3.5 w-3.5 ${rssLoading ? "animate-spin" : ""}`} />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {rssLoading ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" /><span className="text-sm">সংবাদ লোড হচ্ছে...</span>
-            </div>
-          ) : rssError ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground mb-2">সংবাদ লোড করতে সমস্যা হয়েছে</p>
-              <Button variant="outline" size="sm" onClick={fetchRss}>আবার চেষ্টা করুন</Button>
-            </div>
-          ) : (
-            <Tabs defaultValue="দেশীয়" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 h-8">
-                <TabsTrigger value="দেশীয়" className="text-xs gap-1"><Newspaper className="h-3 w-3" /> দেশীয়</TabsTrigger>
-                <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1"><Globe className="h-3 w-3" /> আন্তর্জাতিক</TabsTrigger>
-                <TabsTrigger value="গ্রামের খবর" className="text-xs gap-1"><Radio className="h-3 w-3" /> গ্রামের খবর</TabsTrigger>
-              </TabsList>
-              {rssCategories.map((category) => (
-                <TabsContent key={category} value={category} className="mt-3 space-y-3">
-                  {getRssByCategory(category).length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">এই ক্যাটেগরিতে কোনো সংবাদ নেই</p>
-                  ) : getRssByCategory(category).map((item, i) => (
-                    <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">{item.title}</h4>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="text-[10px] h-5">{item.source}</Badge>
-                            <span className="text-xs text-muted-foreground">{formatDate(item.pubDate)}</span>
-                            <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
-                          </div>
-                        </div>
-                        {item.image && (
-                          <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
-                          </div>
-                        )}
-                      </div>
-                    </a>
-                  ))}
-                </TabsContent>
-              ))}
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };
