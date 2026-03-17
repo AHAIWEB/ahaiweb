@@ -419,6 +419,42 @@ export type Database = {
         }
         Relationships: []
       }
+      site_sections: {
+        Row: {
+          config: Json | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_visible: boolean
+          label: string
+          section_key: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_visible?: boolean
+          label: string
+          section_key: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_visible?: boolean
+          label?: string
+          section_key?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tag_locations: {
         Row: {
           district_id: string | null
