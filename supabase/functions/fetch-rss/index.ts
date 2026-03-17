@@ -3,12 +3,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const RSS_FEEDS = [
+const DEFAULT_FEEDS = [
   { name: 'প্রথম আলো', url: 'https://www.prothomalo.com/feed', category: 'দেশীয়' },
   { name: 'বিডি নিউজ', url: 'https://bangla.bdnews24.com/feed', category: 'দেশীয়' },
   { name: 'ডেইলি স্টার বাংলা', url: 'https://bangla.thedailystar.net/rss.xml', category: 'দেশীয়' },
   { name: 'BBC বাংলা', url: 'https://feeds.bbci.co.uk/bengali/rss.xml', category: 'আন্তর্জাতিক' },
   { name: 'DW বাংলা', url: 'https://rss.dw.com/xml/rss-bn-all', category: 'আন্তর্জাতিক' },
+  { name: 'গ্রামীণ বাংলাদেশ', url: 'https://www.bd-pratidin.com/feed', category: 'গ্রামের খবর' },
 ];
 
 function parseItems(xml: string, sourceName: string, category: string) {
@@ -47,8 +48,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const feedUrls = body.feeds || RSS_FEEDS;
+    // Try to fetch feeds from database
+    let feedUrls = DEFAULT_FEEDS;
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const res = await fetch(`${supabaseUrl}/rest/v1/rss_feeds?is_active=eq.true&select=name,url,category`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
+      });
+      if (res.ok) {
+        const dbFeeds = await res.json();
+        if (dbFeeds.length > 0) feedUrls = dbFeeds;
+      }
+    } catch { /* fallback to defaults */ }
 
     const results: any[] = [];
 
@@ -72,7 +84,6 @@ Deno.serve(async (req) => {
     const allResults = await Promise.all(fetches);
     allResults.forEach((items) => results.push(...items));
 
-    // Sort by date
     results.sort((a, b) => {
       const da = new Date(a.pubDate).getTime() || 0;
       const db = new Date(b.pubDate).getTime() || 0;

@@ -41,6 +41,7 @@ const App = () => (
               <Route path="tags" element={<TagManager />} />
               <Route path="profile" element={<ProfileEdit />} />
               <Route path="categories" element={<CategoryManager />} />
+              <Route path="rss-feeds" element={<RssFeedManager />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
