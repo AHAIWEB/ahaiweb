@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, X } from "lucide-react";
@@ -20,22 +19,14 @@ const QuickPost = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [categoryId, setCategoryId] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [captions, setCaptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
-
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data } = await supabase.from("categories").select("*").order("sort_order");
-      return data || [];
-    },
-  });
 
   const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -65,7 +56,7 @@ const QuickPost = () => {
           slug,
           content: content.trim(),
           excerpt: content.trim().substring(0, 150),
-          category_id: categoryId || null,
+          category_id: selectedCategories[0] || null,
           post_type: "quick" as const,
           status,
           published_at: status === "published" ? new Date().toISOString() : null,
@@ -74,6 +65,13 @@ const QuickPost = () => {
         .single();
 
       if (postError) throw postError;
+
+      // Save multiple categories
+      if (selectedCategories.length > 0) {
+        await supabase.from("post_categories").insert(
+          selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
+        );
+      }
 
       // Save tags
       if (selectedTags.length > 0) {
@@ -133,20 +131,11 @@ const QuickPost = () => {
         <CardContent className="p-5 space-y-4">
           <Input placeholder="শিরোনাম" value={title} onChange={(e) => setTitle(e.target.value)} />
 
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger><SelectValue placeholder="লেবেল নির্বাচন করুন" /></SelectTrigger>
-            <SelectContent>
-              {categories?.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.icon} {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <PostTagLocationPicker
             selectedTags={selectedTags}
             onTagsChange={setSelectedTags}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
             selectedDivision={selectedDivision}
             onDivisionChange={setSelectedDivision}
             selectedDistrict={selectedDistrict}

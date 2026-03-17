@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
@@ -22,29 +21,19 @@ const UrlPost = () => {
   const [sourceName, setSourceName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [content, setContent] = useState("");
-  const [categoryId, setCategoryId] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
-
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data } = await supabase.from("categories").select("*").order("sort_order");
-      return data || [];
-    },
-  });
 
   const fetchMeta = async (url: string) => {
     if (!url.startsWith("http")) return;
     setFetching(true);
     try {
-      const { data, error } = await supabase.functions.invoke("fetch-url-meta", {
-        body: { url },
-      });
+      const { data, error } = await supabase.functions.invoke("fetch-url-meta", { body: { url } });
       if (!error && data) {
         if (data.title && !title) setTitle(data.title);
         if (data.image && !imageUrl) setImageUrl(data.image);
@@ -75,7 +64,7 @@ const UrlPost = () => {
         featured_image: imageUrl || null,
         source_url: sourceUrl.trim(),
         source_name: sourceName.trim() || null,
-        category_id: categoryId || null,
+        category_id: selectedCategories[0] || null,
         post_type: "url" as const,
         status,
         published_at: status === "published" ? new Date().toISOString() : null,
@@ -83,14 +72,19 @@ const UrlPost = () => {
 
       if (postError) throw postError;
 
-      // Save tags
+      // Save multiple categories
+      if (selectedCategories.length > 0) {
+        await supabase.from("post_categories").insert(
+          selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
+        );
+      }
+
       if (selectedTags.length > 0) {
         await supabase.from("post_tags").insert(
           selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
         );
       }
 
-      // Save location
       if (selectedDivision) {
         await supabase.from("post_locations").insert({
           post_id: post.id,
@@ -119,19 +113,8 @@ const UrlPost = () => {
       <Card>
         <CardContent className="p-5 space-y-4">
           <div className="flex gap-2">
-            <Input
-              placeholder="সোর্স URL (https://...)"
-              type="url"
-              value={sourceUrl}
-              onChange={(e) => setSourceUrl(e.target.value)}
-              className="flex-1"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={fetching || !sourceUrl.startsWith("http")}
-              onClick={() => fetchMeta(sourceUrl)}
-            >
+            <Input placeholder="সোর্স URL (https://...)" type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} className="flex-1" />
+            <Button type="button" variant="secondary" disabled={fetching || !sourceUrl.startsWith("http")} onClick={() => fetchMeta(sourceUrl)}>
               {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "ফেচ"}
             </Button>
           </div>
@@ -152,20 +135,11 @@ const UrlPost = () => {
             </div>
           )}
 
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger><SelectValue placeholder="লেবেল নির্বাচন করুন" /></SelectTrigger>
-            <SelectContent>
-              {categories?.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.icon} {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <PostTagLocationPicker
             selectedTags={selectedTags}
             onTagsChange={setSelectedTags}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
             selectedDivision={selectedDivision}
             onDivisionChange={setSelectedDivision}
             selectedDistrict={selectedDistrict}
