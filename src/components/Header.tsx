@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
+  const { user } = useAuth();
 
   const toggleDark = () => {
     setIsDark(!isDark);
