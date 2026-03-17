@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
+import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 
 const UrlPost = () => {
   const { user } = useAuth();
@@ -24,6 +25,10 @@ const UrlPost = () => {
   const [categoryId, setCategoryId] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedUpazila, setSelectedUpazila] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -61,7 +66,7 @@ const UrlPost = () => {
     try {
       const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
 
-      await supabase.from("posts").insert({
+      const { data: post, error: postError } = await supabase.from("posts").insert({
         user_id: user.id,
         title: title.trim(),
         slug,
@@ -74,7 +79,26 @@ const UrlPost = () => {
         post_type: "url" as const,
         status,
         published_at: status === "published" ? new Date().toISOString() : null,
-      });
+      }).select().single();
+
+      if (postError) throw postError;
+
+      // Save tags
+      if (selectedTags.length > 0) {
+        await supabase.from("post_tags").insert(
+          selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
+        );
+      }
+
+      // Save location
+      if (selectedDivision) {
+        await supabase.from("post_locations").insert({
+          post_id: post.id,
+          division_id: selectedDivision || null,
+          district_id: selectedDistrict || null,
+          upazila_id: selectedUpazila || null,
+        });
+      }
 
       toast({ title: "সফল!", description: "URL পোস্ট তৈরি হয়েছে" });
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
@@ -119,9 +143,7 @@ const UrlPost = () => {
           )}
 
           <Input placeholder="শিরোনাম" value={title} onChange={(e) => setTitle(e.target.value)} />
-
           <Input placeholder="সোর্সের নাম (যেমন: প্রথম আলো)" value={sourceName} onChange={(e) => setSourceName(e.target.value)} />
-
           <Input placeholder="ছবির URL (ঐচ্ছিক)" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
 
           {imageUrl && (
@@ -140,6 +162,17 @@ const UrlPost = () => {
               ))}
             </SelectContent>
           </Select>
+
+          <PostTagLocationPicker
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            selectedDivision={selectedDivision}
+            onDivisionChange={setSelectedDivision}
+            selectedDistrict={selectedDistrict}
+            onDistrictChange={setSelectedDistrict}
+            selectedUpazila={selectedUpazila}
+            onUpazilaChange={setSelectedUpazila}
+          />
 
           <textarea
             placeholder="সম্পূর্ণ কনটেন্ট (ঐচ্ছিক)"

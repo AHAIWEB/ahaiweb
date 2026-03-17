@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, X } from "lucide-react";
+import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 
 const QuickPost = () => {
   const { user } = useAuth();
@@ -23,6 +24,10 @@ const QuickPost = () => {
   const [images, setImages] = useState<File[]>([]);
   const [captions, setCaptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedUpazila, setSelectedUpazila] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -70,6 +75,23 @@ const QuickPost = () => {
 
       if (postError) throw postError;
 
+      // Save tags
+      if (selectedTags.length > 0) {
+        await supabase.from("post_tags").insert(
+          selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
+        );
+      }
+
+      // Save location
+      if (selectedDivision) {
+        await supabase.from("post_locations").insert({
+          post_id: post.id,
+          division_id: selectedDivision || null,
+          district_id: selectedDistrict || null,
+          upazila_id: selectedUpazila || null,
+        });
+      }
+
       // Upload images
       for (let i = 0; i < images.length; i++) {
         const file = images[i];
@@ -87,7 +109,6 @@ const QuickPost = () => {
             sort_order: i,
           });
 
-          // Set first image as featured
           if (i === 0) {
             await supabase.from("posts").update({ featured_image: urlData.publicUrl }).eq("id", post.id);
           }
@@ -122,6 +143,17 @@ const QuickPost = () => {
               ))}
             </SelectContent>
           </Select>
+
+          <PostTagLocationPicker
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            selectedDivision={selectedDivision}
+            onDivisionChange={setSelectedDivision}
+            selectedDistrict={selectedDistrict}
+            onDistrictChange={setSelectedDistrict}
+            selectedUpazila={selectedUpazila}
+            onUpazilaChange={setSelectedUpazila}
+          />
 
           <Textarea
             placeholder="কনটেন্ট লিখুন..."

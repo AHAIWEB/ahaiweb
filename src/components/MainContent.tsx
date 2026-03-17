@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Heart, MessageCircle, MapPin, ChevronLeft, ChevronRight, Newspaper, Globe, Radio } from "lucide-react";
-import { useState, useRef } from "react";
+import { Clock, Heart, MessageCircle, MapPin, ChevronLeft, ChevronRight, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const labelColors: Record<string, string> = {
   "আমার ক্যামেরা": "bg-amber-500/10 text-amber-700 border-amber-200",
@@ -40,29 +42,59 @@ const writingPosts = [
   { id: 3, title: "একটি পুরনো চিঠির গল্প", excerpt: "ট্রাংকের তলায় পাওয়া সেই হলুদ হয়ে যাওয়া চিঠি...", date: "৫ মার্চ, ২০২৬", likes: 38 },
 ];
 
-const newsSources = {
-  "দেশীয়": [
-    { title: "ডিজিটাল বাংলাদেশের নতুন অধ্যায়", source: "প্রথম আলো", date: "১৫ মার্চ", excerpt: "প্রযুক্তির নতুন দিগন্তে বাংলাদেশ..." },
-    { title: "শিক্ষা খাতে নতুন বাজেট বরাদ্দ", source: "ডেইলি স্টার", date: "১৪ মার্চ", excerpt: "এবারের বাজেটে শিক্ষা খাতে ব্যাপক বরাদ্দ..." },
-    { title: "পদ্মা সেতুতে ট্রেন চলাচল শুরু", source: "বিডি নিউজ", date: "১৩ মার্চ", excerpt: "অবশেষে পদ্মা সেতু রেল সংযোগ চালু..." },
-  ],
-  "আন্তর্জাতিক": [
-    { title: "জলবায়ু সম্মেলনে নতুন প্রস্তাব", source: "BBC বাংলা", date: "১৫ মার্চ", excerpt: "জাতিসংঘের জলবায়ু সম্মেলনে গুরুত্বপূর্ণ প্রস্তাব..." },
-    { title: "AI প্রযুক্তিতে নতুন মাইলফলক", source: "টেক ক্রাঞ্চ", date: "১৪ মার্চ", excerpt: "কৃত্রিম বুদ্ধিমত্তায় যুগান্তকারী আবিষ্কার..." },
-  ],
-  "টেক": [
-    { title: "নতুন স্মার্টফোন বাজারে আসছে", source: "টেকশহর", date: "১৫ মার্চ", excerpt: "বাংলাদেশি ব্র্যান্ডের নতুন ফ্ল্যাগশিপ ফোন..." },
-    { title: "ফ্রিল্যান্সিংয়ে বাংলাদেশের সাফল্য", source: "আইটি বাজার", date: "১৩ মার্চ", excerpt: "বিশ্বে ফ্রিল্যান্সিংয়ে দ্বিতীয় অবস্থানে..." },
-  ],
-};
+interface RssItem {
+  title: string;
+  link: string;
+  description: string;
+  pubDate: string;
+  image: string;
+  source: string;
+  category: string;
+}
 
 const MainContent = () => {
   const [familySlide, setFamilySlide] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [rssItems, setRssItems] = useState<RssItem[]>([]);
+  const [rssLoading, setRssLoading] = useState(true);
+  const [rssError, setRssError] = useState(false);
+
+  const fetchRss = async () => {
+    setRssLoading(true);
+    setRssError(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-rss");
+      if (!error && data?.success) {
+        setRssItems(data.data || []);
+      } else {
+        setRssError(true);
+      }
+    } catch {
+      setRssError(true);
+    } finally {
+      setRssLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRss();
+  }, []);
 
   const scrollTravel = (dir: "left" | "right") => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
+    }
+  };
+
+  const rssCategories = ["দেশীয়", "আন্তর্জাতিক", "টেক"];
+  const getRssByCategory = (cat: string) => rssItems.filter((item) => item.category === cat).slice(0, 5);
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("bn-BD", { day: "numeric", month: "long" });
+    } catch {
+      return dateStr;
     }
   };
 
@@ -113,7 +145,6 @@ const MainContent = () => {
               </div>
             ))}
           </div>
-          {/* Grid below slider */}
           <div className="grid grid-cols-3 gap-2 mt-3">
             {travelPosts.slice(0, 3).map((post) => (
               <div key={post.id} className="aspect-square rounded-md bg-muted overflow-hidden relative group cursor-pointer">
@@ -154,7 +185,6 @@ const MainContent = () => {
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          {/* Thumbnail strip */}
           <div className="flex gap-2 mt-3">
             {familyPhotos.map((photo, i) => (
               <button
@@ -188,49 +218,77 @@ const MainContent = () => {
         </CardContent>
       </Card>
 
-      {/* 📰 সংবাদ - 3 Tabs */}
+      {/* 📰 সংবাদ - Live RSS */}
       <Card className="news-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="section-title text-base !mb-0">📰 সংবাদ</CardTitle>
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="section-title text-base !mb-0">📰 সংবাদ (লাইভ)</CardTitle>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchRss} disabled={rssLoading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${rssLoading ? "animate-spin" : ""}`} />
+          </Button>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="দেশীয়" className="w-full">
-            <TabsList className="w-full grid grid-cols-3 h-8">
-              <TabsTrigger value="দেশীয়" className="text-xs gap-1">
-                <Newspaper className="h-3 w-3" /> দেশীয়
-              </TabsTrigger>
-              <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1">
-                <Globe className="h-3 w-3" /> আন্তর্জাতিক
-              </TabsTrigger>
-              <TabsTrigger value="টেক" className="text-xs gap-1">
-                <Radio className="h-3 w-3" /> টেক
-              </TabsTrigger>
-            </TabsList>
+          {rssLoading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <span className="text-sm">সংবাদ লোড হচ্ছে...</span>
+            </div>
+          ) : rssError ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground mb-2">সংবাদ লোড করতে সমস্যা হয়েছে</p>
+              <Button variant="outline" size="sm" onClick={fetchRss}>আবার চেষ্টা করুন</Button>
+            </div>
+          ) : (
+            <Tabs defaultValue="দেশীয়" className="w-full">
+              <TabsList className="w-full grid grid-cols-3 h-8">
+                <TabsTrigger value="দেশীয়" className="text-xs gap-1">
+                  <Newspaper className="h-3 w-3" /> দেশীয়
+                </TabsTrigger>
+                <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1">
+                  <Globe className="h-3 w-3" /> আন্তর্জাতিক
+                </TabsTrigger>
+                <TabsTrigger value="টেক" className="text-xs gap-1">
+                  <Radio className="h-3 w-3" /> টেক
+                </TabsTrigger>
+              </TabsList>
 
-            {Object.entries(newsSources).map(([category, items]) => (
-              <TabsContent key={category} value={category} className="mt-3 space-y-3">
-                {items.map((item, i) => (
-                  <div key={i} className="group cursor-pointer border-b border-border last:border-0 pb-3 last:pb-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">
-                          {item.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.excerpt}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-[10px] h-5">{item.source}</Badge>
-                          <span className="text-xs text-muted-foreground">{item.date}</span>
+              {rssCategories.map((category) => (
+                <TabsContent key={category} value={category} className="mt-3 space-y-3">
+                  {getRssByCategory(category).length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">এই ক্যাটেগরিতে কোনো সংবাদ পাওয়া যায়নি</p>
+                  ) : (
+                    getRssByCategory(category).map((item, i) => (
+                      <a
+                        key={i}
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group cursor-pointer border-b border-border last:border-0 pb-3 last:pb-0 block"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">
+                              {item.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="outline" className="text-[10px] h-5">{item.source}</Badge>
+                              <span className="text-xs text-muted-foreground">{formatDate(item.pubDate)}</span>
+                              <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
+                            </div>
+                          </div>
+                          {item.image && (
+                            <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
+                              <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
-                        <img src="/placeholder.svg" alt={item.title} className="w-full h-full object-cover" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </TabsContent>
-            ))}
-          </Tabs>
+                      </a>
+                    ))
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 
