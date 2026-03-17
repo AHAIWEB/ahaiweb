@@ -162,7 +162,7 @@ const MainContent = () => {
     </div>
   );
 
-  const rssCategories = ["দেশীয়", "আন্তর্জাতিক", "টেক"];
+  const rssCategories = ["দেশীয়", "আন্তর্জাতিক", "গ্রামের খবর"];
   const getRssByCategory = (cat: string) => rssItems.filter((item) => item.category === cat).slice(0, 5);
 
   return (
