@@ -21,6 +21,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          show_in_nav: boolean
           slug: string
           sort_order: number | null
         }
@@ -30,6 +31,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          show_in_nav?: boolean
           slug: string
           sort_order?: number | null
         }
@@ -39,8 +41,33 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          show_in_nav?: boolean
           slug?: string
           sort_order?: number | null
+        }
+        Relationships: []
+      }
+      daily_content: {
+        Row: {
+          content_type: string
+          created_at: string
+          data: Json
+          date: string
+          id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          data?: Json
+          date: string
+          id?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          data?: Json
+          date?: string
+          id?: string
         }
         Relationships: []
       }
