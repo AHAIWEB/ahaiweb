@@ -1,7 +1,9 @@
-import { Search, Bell, Moon, Sun, Menu } from "lucide-react";
+import { Search, Bell, Moon, Sun, Menu, Settings, LogIn, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
