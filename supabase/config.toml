@@ -1,1 +1,10 @@
 project_id = "zuohppypqsagwvtafdmq"
+
+[functions.fetch-daily-content]
+verify_jwt = false
+
+[functions.fetch-rss]
+verify_jwt = false
+
+[functions.fetch-url-meta]
+verify_jwt = false
