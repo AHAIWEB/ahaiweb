@@ -17,6 +17,7 @@ import TagManager from "./pages/admin/TagManager";
 import ProfileEdit from "./pages/admin/ProfileEdit";
 import CategoryManager from "./pages/admin/CategoryManager";
 import RssFeedManager from "./pages/admin/RssFeedManager";
+import SiteCustomizer from "./pages/admin/SiteCustomizer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
