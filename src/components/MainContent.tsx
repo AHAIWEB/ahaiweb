@@ -1,13 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { useSearchParams } from "react-router-dom";
 
 interface RssItem {
   title: string; link: string; description: string; pubDate: string; image: string; source: string; category: string;
