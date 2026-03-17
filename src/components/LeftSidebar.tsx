@@ -1,16 +1,65 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, Star, Quote } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Star, Quote, TrendingUp, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const LeftSidebar = () => {
   const today = new Date();
-  const options: Intl.DateTimeFormatOptions = { 
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+  const todayBn = today.toLocaleDateString('bn-BD', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  const { data: recentPosts } = useQuery({
+    queryKey: ["sidebar-recent"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select("id, title, slug, created_at, views, likes, categories(name, icon, color)")
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+  });
+
+  const { data: popularPosts } = useQuery({
+    queryKey: ["sidebar-popular"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select("id, title, slug, views, likes, categories(name, icon, color)")
+        .eq("status", "published")
+        .order("views", { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ["sidebar-categories"],
+    queryFn: async () => {
+      const { data } = await supabase.from("categories").select("*").order("sort_order");
+      return data || [];
+    },
+  });
+
+  const formatDate = (d: string) => {
+    try { return new Date(d).toLocaleDateString("bn-BD", { day: "numeric", month: "short" }); }
+    catch { return d; }
   };
-  const todayBn = today.toLocaleDateString('bn-BD', options);
+
+  const quotes = [
+    { text: "জীবন হলো এক অদ্ভুত ভ্রমণ, যেখানে প্রতিটি মোড়ে নতুন অভিজ্ঞতা অপেক্ষা করছে।", author: "রবীন্দ্রনাথ ঠাকুর" },
+    { text: "শিক্ষা হলো সেই জিনিস যা আপনি স্কুলে যা শিখেছেন তা ভুলে যাওয়ার পরেও থেকে যায়।", author: "আলবার্ট আইনস্টাইন" },
+    { text: "ক্ষুধার রাজ্যে পৃথিবী গদ্যময়, পূর্ণিমার চাঁদ যেন ঝলসানো রুটি।", author: "সুকান্ত ভট্টাচার্য" },
+  ];
+  const todayQuote = quotes[today.getDate() % quotes.length];
 
   return (
     <div className="space-y-4">
+      {/* আজকের দিন */}
       <Card className="news-card">
         <CardHeader className="pb-2">
           <CardTitle className="section-title text-base !mb-0">আজকের দিন</CardTitle>
@@ -18,15 +67,9 @@ const LeftSidebar = () => {
         <CardContent>
           <Tabs defaultValue="today" className="w-full">
             <TabsList className="w-full grid grid-cols-3 h-8">
-              <TabsTrigger value="today" className="text-xs gap-1">
-                <CalendarDays className="h-3 w-3" /> এই দিনে
-              </TabsTrigger>
-              <TabsTrigger value="horoscope" className="text-xs gap-1">
-                <Star className="h-3 w-3" /> রাশি
-              </TabsTrigger>
-              <TabsTrigger value="quotes" className="text-xs gap-1">
-                <Quote className="h-3 w-3" /> উক্তি
-              </TabsTrigger>
+              <TabsTrigger value="today" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> এই দিনে</TabsTrigger>
+              <TabsTrigger value="horoscope" className="text-xs gap-1"><Star className="h-3 w-3" /> রাশি</TabsTrigger>
+              <TabsTrigger value="quotes" className="text-xs gap-1"><Quote className="h-3 w-3" /> উক্তি</TabsTrigger>
             </TabsList>
 
             <TabsContent value="today" className="mt-3">
@@ -47,19 +90,88 @@ const LeftSidebar = () => {
               <div className="text-center py-4">
                 <p className="text-3xl mb-2">♈</p>
                 <p className="font-medium text-sm">মেষ রাশি</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  আজ আপনার জন্য শুভ দিন। নতুন উদ্যোগ শুরু করার উপযুক্ত সময়।
-                </p>
+                <p className="text-xs text-muted-foreground mt-2">আজ আপনার জন্য শুভ দিন। নতুন উদ্যোগ শুরু করার উপযুক্ত সময়।</p>
               </div>
             </TabsContent>
 
             <TabsContent value="quotes" className="mt-3">
-              <blockquote className="border-l-2 border-primary pl-3 italic text-sm text-muted-foreground">
-                "জীবন হলো এক অদ্ভুত ভ্রমণ, যেখানে প্রতিটি মোড়ে নতুন অভিজ্ঞতা অপেক্ষা করছে।"
-              </blockquote>
-              <p className="text-xs text-right mt-2 text-muted-foreground">— রবীন্দ্রনাথ ঠাকুর</p>
+              <blockquote className="border-l-2 border-primary pl-3 italic text-sm text-muted-foreground">"{todayQuote.text}"</blockquote>
+              <p className="text-xs text-right mt-2 text-muted-foreground">— {todayQuote.author}</p>
             </TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* সাম্প্রতিক ও জনপ্রিয় */}
+      <Card className="news-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="section-title text-base !mb-0">পোস্ট</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="recent" className="w-full">
+            <TabsList className="w-full grid grid-cols-2 h-8">
+              <TabsTrigger value="recent" className="text-xs gap-1"><Clock className="h-3 w-3" /> সাম্প্রতিক</TabsTrigger>
+              <TabsTrigger value="popular" className="text-xs gap-1"><TrendingUp className="h-3 w-3" /> জনপ্রিয়</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="recent" className="mt-3 space-y-2.5">
+              {recentPosts?.map((post, i) => (
+                <div key={post.id} className="flex gap-2.5 items-start group cursor-pointer">
+                  <span className="text-xs font-bold text-muted-foreground/50 mt-0.5 w-4 shrink-0">{i + 1}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] text-muted-foreground">{formatDate(post.created_at)}</span>
+                      {(post.categories as any)?.name && (
+                        <Badge variant="outline" className="text-[9px] h-4 px-1.5">{(post.categories as any).icon} {(post.categories as any).name}</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(!recentPosts || recentPosts.length === 0) && <p className="text-xs text-muted-foreground text-center py-3">কোনো পোস্ট নেই</p>}
+            </TabsContent>
+
+            <TabsContent value="popular" className="mt-3 space-y-2.5">
+              {popularPosts?.map((post, i) => (
+                <div key={post.id} className="flex gap-2.5 items-start group cursor-pointer">
+                  <span className="text-xs font-bold text-primary/60 mt-0.5 w-4 shrink-0">{i + 1}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] text-muted-foreground">👁 {post.views || 0} · ❤ {post.likes || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(!popularPosts || popularPosts.length === 0) && <p className="text-xs text-muted-foreground text-center py-3">কোনো পোস্ট নেই</p>}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* লেবেল */}
+      <Card className="news-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="section-title text-base !mb-0">🏷️ লেবেল</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1.5">
+            {categories?.map((cat) => (
+              <Badge
+                key={cat.id}
+                className="text-xs cursor-pointer hover:opacity-80 transition-opacity border-0"
+                style={{
+                  backgroundColor: cat.color ? `${cat.color}20` : undefined,
+                  color: cat.color || undefined,
+                  borderColor: cat.color || undefined,
+                  border: `1px solid ${cat.color || 'hsl(var(--border))'}`,
+                }}
+              >
+                {cat.icon} {cat.name}
+              </Badge>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
