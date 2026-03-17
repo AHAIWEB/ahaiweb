@@ -74,6 +74,14 @@ const MainContent = () => {
   const [travelRef, travelApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin.current]);
   const [familyRef, familyApi] = useEmblaCarousel({ loop: true, align: "center", containScroll: false }, [autoplayPlugin2.current]);
 
+  const { data: siteSections } = useQuery({
+    queryKey: ["site-sections"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_sections").select("*").order("sort_order");
+      return (data as any[]) || [];
+    },
+  });
+
   const { data: allCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -165,251 +173,281 @@ const MainContent = () => {
   const rssCategories = ["দেশীয়", "আন্তর্জাতিক", "গ্রামের খবর"];
   const getRssByCategory = (cat: string) => rssItems.filter((item) => item.category === cat).slice(0, 5);
 
-  return (
-    <div className="space-y-6">
-      {/* 📰 সংবাদ - Live RSS — MOVED TO TOP */}
-      <Card className="news-card">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="section-title text-base !mb-0">📰 সংবাদ (লাইভ)</CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchRss} disabled={rssLoading}>
-            <RefreshCw className={`h-3.5 w-3.5 ${rssLoading ? "animate-spin" : ""}`} />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {rssLoading ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" /><span className="text-sm">সংবাদ লোড হচ্ছে...</span>
-            </div>
-          ) : rssError ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground mb-2">সংবাদ লোড করতে সমস্যা হয়েছে</p>
-              <Button variant="outline" size="sm" onClick={fetchRss}>আবার চেষ্টা করুন</Button>
-            </div>
-          ) : (
-            <Tabs defaultValue="দেশীয়" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 h-8">
-                <TabsTrigger value="দেশীয়" className="text-xs gap-1"><Newspaper className="h-3 w-3" /> দেশীয়</TabsTrigger>
-                <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1"><Globe className="h-3 w-3" /> আন্তর্জাতিক</TabsTrigger>
-                <TabsTrigger value="গ্রামের খবর" className="text-xs gap-1"><Radio className="h-3 w-3" /> গ্রামের খবর</TabsTrigger>
-              </TabsList>
-              {rssCategories.map((category) => (
-                <TabsContent key={category} value={category} className="mt-3 space-y-3">
-                  {getRssByCategory(category).length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">এই ক্যাটেগরিতে কোনো সংবাদ নেই</p>
-                  ) : getRssByCategory(category).map((item, i) => (
-                    <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">{item.title}</h4>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="text-[10px] h-5">{item.source}</Badge>
-                            <span className="text-xs text-muted-foreground">{formatDate(item.pubDate)}</span>
-                            <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
+  const visibleSections = siteSections?.filter((s: any) => s.is_visible) || [];
+
+  const renderSection = (sectionKey: string) => {
+    switch (sectionKey) {
+      case "news":
+        return (
+          <Card className="news-card" key="news">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="section-title text-base !mb-0">📰 সংবাদ (লাইভ)</CardTitle>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchRss} disabled={rssLoading}>
+                <RefreshCw className={`h-3.5 w-3.5 ${rssLoading ? "animate-spin" : ""}`} />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {rssLoading ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" /><span className="text-sm">সংবাদ লোড হচ্ছে...</span>
+                </div>
+              ) : rssError ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-2">সংবাদ লোড করতে সমস্যা হয়েছে</p>
+                  <Button variant="outline" size="sm" onClick={fetchRss}>আবার চেষ্টা করুন</Button>
+                </div>
+              ) : (
+                <Tabs defaultValue="দেশীয়" className="w-full">
+                  <TabsList className="w-full grid grid-cols-3 h-8">
+                    <TabsTrigger value="দেশীয়" className="text-xs gap-1"><Newspaper className="h-3 w-3" /> দেশীয়</TabsTrigger>
+                    <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1"><Globe className="h-3 w-3" /> আন্তর্জাতিক</TabsTrigger>
+                    <TabsTrigger value="গ্রামের খবর" className="text-xs gap-1"><Radio className="h-3 w-3" /> গ্রামের খবর</TabsTrigger>
+                  </TabsList>
+                  {rssCategories.map((category) => (
+                    <TabsContent key={category} value={category} className="mt-3 space-y-3">
+                      {getRssByCategory(category).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">এই ক্যাটেগরিতে কোনো সংবাদ নেই</p>
+                      ) : getRssByCategory(category).map((item, i) => (
+                        <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">{item.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline" className="text-[10px] h-5">{item.source}</Badge>
+                                <span className="text-xs text-muted-foreground">{formatDate(item.pubDate)}</span>
+                                <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
+                              </div>
+                            </div>
+                            {item.image && (
+                              <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
+                                <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      ))}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              )}
+            </CardContent>
+          </Card>
+        );
+
+      case "camera":
+        return (
+          <Card className="news-card" key="camera">
+            <CardHeader className="pb-2">
+              <CardTitle className="section-title text-base !mb-0">📸 আমার ক্যামেরা</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {postsLoading ? (
+                <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
+              ) : photoPosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">কোনো ছবি পোস্ট নেই</p>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+                  {photoPosts.slice(0, 8).map((p) => (
+                    <div key={p.id} className="min-w-[160px] h-[120px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
+                      <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                        <p className="text-white text-xs font-medium line-clamp-2">{p.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+
+      case "travel":
+        return (
+          <Card className="news-card overflow-hidden" key="travel">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
+                <Plane className="h-4 w-4" /> ভ্রমণ
+              </CardTitle>
+              <SlideControls emblaApi={travelApi} />
+            </CardHeader>
+            <CardContent className="px-0 pb-3">
+              <div className="overflow-hidden" ref={travelRef}>
+                <div className="flex">
+                  {travelData.map((item) => (
+                    <div key={item.id} className="flex-[0_0_85%] min-w-0 pl-4 first:pl-4">
+                      <div className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer">
+                        <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <p className="text-white text-sm font-bold drop-shadow-lg">{item.title}</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Plane className="h-3 w-3 text-white/70" />
+                            <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
                           </div>
                         </div>
-                        {item.image && (
-                          <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <SlideDots emblaApi={travelApi} count={travelData.length} />
+            </CardContent>
+          </Card>
+        );
+
+      case "writing":
+        return (
+          <Card className="news-card overflow-hidden" key="writing">
+            <CardHeader className="pb-2">
+              <CardTitle className="section-title text-base !mb-0">✍️ লেখালেখি</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {postsLoading ? (
+                <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
+              ) : writingPosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">কোনো লেখা পোস্ট নেই</p>
+              ) : (
+                <div>
+                  {writingPosts[0] && (
+                    <div className="relative group cursor-pointer">
+                      {writingPosts[0].featured_image && (
+                        <div className="aspect-[16/9] overflow-hidden">
+                          <img src={writingPosts[0].featured_image} alt={writingPosts[0].title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        </div>
+                      )}
+                      <div className={`${writingPosts[0].featured_image ? 'absolute bottom-0 left-0 right-0' : ''} p-4`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-primary/90 text-primary-foreground text-[10px] border-0">✍️ লেখালেখি</Badge>
+                          <span className={`text-[10px] ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                            {formatDate(writingPosts[0].created_at)}
+                          </span>
+                        </div>
+                        <h3 className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors`}>
+                          {writingPosts[0].title}
+                        </h3>
+                        {writingPosts[0].excerpt && (
+                          <p className={`text-xs mt-1.5 line-clamp-2 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                            {writingPosts[0].excerpt}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="divide-y divide-border">
+                    {writingPosts.slice(1, 5).map((post, idx) => (
+                      <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0 mt-0.5">
+                          {idx + 2}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(post.created_at)}</span>
+                            <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {post.likes || 0}</span>
+                          </div>
+                          <PostBadges post={post} />
+                        </div>
+                        {post.featured_image && (
+                          <div className="w-16 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
+                            <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
                           </div>
                         )}
                       </div>
-                    </a>
-                  ))}
-                </TabsContent>
-              ))}
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 📸 আমার ক্যামেরা */}
-      <Card className="news-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="section-title text-base !mb-0">📸 আমার ক্যামেরা</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {postsLoading ? (
-            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
-          ) : photoPosts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">কোনো ছবি পোস্ট নেই</p>
-          ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-              {photoPosts.slice(0, 8).map((p) => (
-                <div key={p.id} className="min-w-[160px] h-[120px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
-                  <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                    <p className="text-white text-xs font-medium line-clamp-2">{p.title}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ✈️ ভ্রমণ — Embla Carousel */}
-      <Card className="news-card overflow-hidden">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
-            <Plane className="h-4 w-4" /> ভ্রমণ
-          </CardTitle>
-          <SlideControls emblaApi={travelApi} />
-        </CardHeader>
-        <CardContent className="px-0 pb-3">
-          <div className="overflow-hidden" ref={travelRef}>
-            <div className="flex">
-              {travelData.map((item) => (
-                <div key={item.id} className="flex-[0_0_85%] min-w-0 pl-4 first:pl-4">
-                  <div className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer">
-                    <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="text-white text-sm font-bold drop-shadow-lg">{item.title}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Plane className="h-3 w-3 text-white/70" />
-                        <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <SlideDots emblaApi={travelApi} count={travelData.length} />
-        </CardContent>
-      </Card>
-
-      {/* ✍️ লেখালেখি — Magazine Style */}
-      <Card className="news-card overflow-hidden">
-        <CardHeader className="pb-2">
-          <CardTitle className="section-title text-base !mb-0">✍️ লেখালেখি</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {postsLoading ? (
-            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
-          ) : writingPosts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">কোনো লেখা পোস্ট নেই</p>
-          ) : (
-            <div>
-              {/* Hero writing post */}
-              {writingPosts[0] && (
-                <div className="relative group cursor-pointer">
-                  {writingPosts[0].featured_image && (
-                    <div className="aspect-[16/9] overflow-hidden">
-                      <img src={writingPosts[0].featured_image} alt={writingPosts[0].title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                    </div>
-                  )}
-                  <div className={`${writingPosts[0].featured_image ? 'absolute bottom-0 left-0 right-0' : ''} p-4`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className="bg-primary/90 text-primary-foreground text-[10px] border-0">✍️ লেখালেখি</Badge>
-                      <span className={`text-[10px] ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
-                        {formatDate(writingPosts[0].created_at)}
-                      </span>
-                    </div>
-                    <h3 className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors`}>
-                      {writingPosts[0].title}
-                    </h3>
-                    {writingPosts[0].excerpt && (
-                      <p className={`text-xs mt-1.5 line-clamp-2 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
-                        {writingPosts[0].excerpt}
-                      </p>
-                    )}
+                    ))}
                   </div>
                 </div>
               )}
-              {/* Rest of writing posts */}
-              <div className="divide-y divide-border">
-                {writingPosts.slice(1, 5).map((post, idx) => (
-                  <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0 mt-0.5">
-                      {idx + 2}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(post.created_at)}</span>
-                        <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {post.likes || 0}</span>
+            </CardContent>
+          </Card>
+        );
+
+      case "family":
+        return (
+          <Card className="news-card overflow-hidden" key="family">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
+                <Users className="h-4 w-4" /> ফ্যামিলি
+              </CardTitle>
+              <SlideControls emblaApi={familyApi} />
+            </CardHeader>
+            <CardContent className="px-0 pb-3">
+              <div className="overflow-hidden" ref={familyRef}>
+                <div className="flex">
+                  {familyData.map((item) => (
+                    <div key={item.id} className="flex-[0_0_45%] min-w-0 pl-3 first:pl-4">
+                      <div className="relative group cursor-pointer">
+                        <div className="rounded-2xl overflow-hidden aspect-[3/4] ring-2 ring-border/50 group-hover:ring-primary/50 transition-all duration-300">
+                          <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-2xl" />
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-white text-xs font-bold drop-shadow-lg line-clamp-2">{item.title}</p>
+                        </div>
                       </div>
-                      <PostBadges post={post} />
                     </div>
+                  ))}
+                </div>
+              </div>
+              <SlideDots emblaApi={familyApi} count={familyData.length} />
+            </CardContent>
+          </Card>
+        );
+
+      case "url-posts":
+        return urlPosts.length > 0 ? (
+          <Card className="news-card" key="url-posts">
+            <CardHeader className="pb-2">
+              <CardTitle className="section-title text-base !mb-0">🔗 শেয়ার করা লিংক</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {urlPosts.slice(0, 5).map((post) => (
+                <a key={post.id} href={post.source_url || "#"} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
+                  <div className="flex gap-3">
                     {post.featured_image && (
-                      <div className="w-16 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
+                      <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
                         <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
                       </div>
                     )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 👨‍👩‍👧‍👦 ফ্যামিলি — Circular Carousel */}
-      <Card className="news-card overflow-hidden">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
-            <Users className="h-4 w-4" /> ফ্যামিলি
-          </CardTitle>
-          <SlideControls emblaApi={familyApi} />
-        </CardHeader>
-        <CardContent className="px-0 pb-3">
-          <div className="overflow-hidden" ref={familyRef}>
-            <div className="flex">
-              {familyData.map((item) => (
-                <div key={item.id} className="flex-[0_0_45%] min-w-0 pl-3 first:pl-4">
-                  <div className="relative group cursor-pointer">
-                    <div className="rounded-2xl overflow-hidden aspect-[3/4] ring-2 ring-border/50 group-hover:ring-primary/50 transition-all duration-300">
-                      <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-2xl" />
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="text-white text-xs font-bold drop-shadow-lg line-clamp-2">{item.title}</p>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold group-hover:text-primary transition-colors">{post.title}</h4>
+                      {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
+                        {post.source_name && <Badge variant="outline" className="text-[10px] h-5">{post.source_name}</Badge>}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                      <PostBadges post={post} />
                     </div>
                   </div>
-                </div>
+                </a>
               ))}
-            </div>
-          </div>
-          <SlideDots emblaApi={familyApi} count={familyData.length} />
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ) : null;
 
-      {/* 🔗 URL পোস্ট */}
-      {urlPosts.length > 0 && (
-        <Card className="news-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="section-title text-base !mb-0">🔗 শেয়ার করা লিংক</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {urlPosts.slice(0, 5).map((post) => (
-              <a key={post.id} href={post.source_url || "#"} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
-                <div className="flex gap-3">
-                  {post.featured_image && (
-                    <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
-                      <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-bold group-hover:text-primary transition-colors">{post.title}</h4>
-                    {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
-                      {post.source_name && <Badge variant="outline" className="text-[10px] h-5">{post.source_name}</Badge>}
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </div>
-                    <PostBadges post={post} />
-                  </div>
-                </div>
-              </a>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      default:
+        // Handle ad slots or custom sections
+        const section = visibleSections.find((s: any) => s.section_key === sectionKey);
+        if (section?.config?.type === "ad" && section?.config?.ad_code) {
+          return (
+            <div key={sectionKey} className="w-full" dangerouslySetInnerHTML={{ __html: section.config.ad_code }} />
+          );
+        }
+        return null;
+    }
+  };
 
+  // If site_sections loaded, render in order; otherwise fallback
+  const orderedKeys = visibleSections.length > 0
+    ? visibleSections.map((s: any) => s.section_key)
+    : ["news", "camera", "travel", "writing", "family", "url-posts"];
+
+  return (
+    <div className="space-y-6">
+      {orderedKeys.map((key: string) => renderSection(key))}
     </div>
   );
 };
