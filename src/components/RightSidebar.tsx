@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Hash, Tag, Users, PenLine, Share2, Facebook, Twitter, Linkedin, Copy } from "lucide-react";
+import { Hash, Tag, Users, PenLine, Share2, Facebook, Twitter, Linkedin, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import LocationMapWidget from "./LocationMapWidget";
 
 const RightSidebar = () => {
   const { toast } = useToast();
@@ -17,13 +18,6 @@ const RightSidebar = () => {
     },
   });
 
-  const { data: divisions } = useQuery({
-    queryKey: ["public-divisions"],
-    queryFn: async () => {
-      const { data } = await supabase.from("divisions").select("*").order("bn_name");
-      return data || [];
-    },
-  });
 
   const { data: categories } = useQuery({
     queryKey: ["public-categories"],
@@ -189,24 +183,8 @@ const RightSidebar = () => {
         </Card>
       )}
 
-      {/* ম্যাপ ও বিভাগ */}
-      <Card className="news-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
-            <MapPin className="h-4 w-4" /> বিভাগ
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-1.5">
-            {divisions?.map((d) => (
-              <div key={d.id}
-                className="text-xs px-2.5 py-1.5 rounded-md bg-muted/60 hover:bg-primary hover:text-primary-foreground cursor-pointer transition-colors text-center font-medium">
-                {d.bn_name}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* ম্যাপ - ইন্টারেক্টিভ লোকেশন ব্রাউজার */}
+      <LocationMapWidget />
 
       {/* লেবেল */}
       <Card className="news-card">
