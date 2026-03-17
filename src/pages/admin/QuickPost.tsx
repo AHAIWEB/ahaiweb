@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { ImagePlus, X } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
+import MultiImageUploader, { ImageItem } from "@/components/MultiImageUploader";
 
 const QuickPost = () => {
   const { user } = useAuth();
@@ -19,27 +19,13 @@ const QuickPost = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [captions, setCaptions] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
-
-  const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...files]);
-      setCaptions((prev) => [...prev, ...files.map(() => "")]);
-    }
-  };
-
-  const removeImage = (idx: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx));
-    setCaptions((prev) => prev.filter((_, i) => i !== idx));
-  };
 
   const handleSubmit = async (status: "draft" | "published") => {
     if (!title.trim() || !user) return;
@@ -66,21 +52,18 @@ const QuickPost = () => {
 
       if (postError) throw postError;
 
-      // Save multiple categories
       if (selectedCategories.length > 0) {
         await supabase.from("post_categories").insert(
           selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
         );
       }
 
-      // Save tags
       if (selectedTags.length > 0) {
         await supabase.from("post_tags").insert(
           selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
         );
       }
 
-      // Save location
       if (selectedDivision) {
         await supabase.from("post_locations").insert({
           post_id: post.id,
@@ -90,25 +73,34 @@ const QuickPost = () => {
         });
       }
 
-      // Upload images
+      // Upload images (file or URL)
       for (let i = 0; i < images.length; i++) {
-        const file = images[i];
-        const filePath = `${user.id}/${post.id}/${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage.from("media").upload(filePath, file);
+        const img = images[i];
+        let fileUrl = "";
 
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
+        if (img.type === "file" && img.file) {
+          const filePath = `${user.id}/${post.id}/${Date.now()}-${img.file.name}`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(filePath, img.file);
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
+            fileUrl = urlData.publicUrl;
+          }
+        } else if (img.type === "url" && img.url) {
+          fileUrl = img.url;
+        }
+
+        if (fileUrl) {
           await supabase.from("media").insert({
             user_id: user.id,
             post_id: post.id,
-            file_url: urlData.publicUrl,
-            file_name: file.name,
-            caption: captions[i] || null,
+            file_url: fileUrl,
+            file_name: img.file?.name || "url-image",
+            caption: img.caption || null,
             sort_order: i,
           });
 
           if (i === 0) {
-            await supabase.from("posts").update({ featured_image: urlData.publicUrl }).eq("id", post.id);
+            await supabase.from("posts").update({ featured_image: fileUrl }).eq("id", post.id);
           }
         }
       }
@@ -151,34 +143,7 @@ const QuickPost = () => {
             onChange={(e) => setContent(e.target.value)}
           />
 
-          {/* Image upload */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">ছবি যোগ করুন</label>
-            <div className="flex flex-wrap gap-3">
-              {images.map((img, i) => (
-                <div key={i} className="relative w-24 h-24">
-                  <img src={URL.createObjectURL(img)} alt="" className="w-full h-full object-cover rounded-lg" />
-                  <button onClick={() => removeImage(i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
-                    <X className="h-3 w-3" />
-                  </button>
-                  <Input
-                    placeholder="ক্যাপশন"
-                    className="mt-1 h-6 text-xs"
-                    value={captions[i]}
-                    onChange={(e) => {
-                      const newCaptions = [...captions];
-                      newCaptions[i] = e.target.value;
-                      setCaptions(newCaptions);
-                    }}
-                  />
-                </div>
-              ))}
-              <label className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
-                <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
-              </label>
-            </div>
-          </div>
+          <MultiImageUploader images={images} onChange={setImages} />
 
           <div className="flex gap-3 pt-2">
             <Button onClick={() => handleSubmit("draft")} variant="secondary" disabled={loading || !title.trim()}>

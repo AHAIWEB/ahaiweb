@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, X, Bold, Italic, Heading1, Heading2, List, Quote } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
+import MultiImageUploader, { ImageItem } from "@/components/MultiImageUploader";
 
 const EditorPost = () => {
   const { user } = useAuth();
@@ -22,8 +23,7 @@ const EditorPost = () => {
   const [excerpt, setExcerpt] = useState("");
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
   const [featuredPreview, setFeaturedPreview] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [captions, setCaptions] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -34,14 +34,6 @@ const EditorPost = () => {
   const handleFeaturedImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) { setFeaturedImage(file); setFeaturedPreview(URL.createObjectURL(file)); }
-  };
-
-  const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...files]);
-      setCaptions((prev) => [...prev, ...files.map(() => "")]);
-    }
   };
 
   const insertFormatting = (prefix: string, suffix: string = "") => {
@@ -89,7 +81,6 @@ const EditorPost = () => {
 
       if (postError) throw postError;
 
-      // Save multiple categories
       if (selectedCategories.length > 0) {
         await supabase.from("post_categories").insert(
           selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
@@ -111,16 +102,30 @@ const EditorPost = () => {
         });
       }
 
-      // Upload additional images
+      // Upload additional images (file or URL)
       for (let i = 0; i < images.length; i++) {
-        const file = images[i];
-        const filePath = `${user.id}/${post.id}/${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage.from("media").upload(filePath, file);
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
+        const img = images[i];
+        let fileUrl = "";
+
+        if (img.type === "file" && img.file) {
+          const filePath = `${user.id}/${post.id}/${Date.now()}-${img.file.name}`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(filePath, img.file);
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
+            fileUrl = urlData.publicUrl;
+          }
+        } else if (img.type === "url" && img.url) {
+          fileUrl = img.url;
+        }
+
+        if (fileUrl) {
           await supabase.from("media").insert({
-            user_id: user.id, post_id: post.id, file_url: urlData.publicUrl,
-            file_name: file.name, caption: captions[i] || null, sort_order: i,
+            user_id: user.id,
+            post_id: post.id,
+            file_url: fileUrl,
+            file_name: img.file?.name || "url-image",
+            caption: img.caption || null,
+            sort_order: i,
           });
         }
       }
@@ -189,27 +194,8 @@ const EditorPost = () => {
           <Textarea id="editor-content" placeholder="কনটেন্ট লিখুন... (মার্কডাউন সাপোর্টেড)" rows={12} value={content} onChange={(e) => setContent(e.target.value)} className="font-mono text-sm" />
           <Input placeholder="সারসংক্ষেপ (ঐচ্ছিক)" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
 
-          {/* Additional images */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">অতিরিক্ত ছবি</label>
-            <div className="flex flex-wrap gap-3">
-              {images.map((img, i) => (
-                <div key={i} className="relative">
-                  <img src={URL.createObjectURL(img)} alt="" className="w-20 h-20 object-cover rounded-lg" />
-                  <button onClick={() => { setImages(p => p.filter((_, j) => j !== i)); setCaptions(p => p.filter((_, j) => j !== i)); }}
-                    className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
-                    <X className="h-3 w-3" />
-                  </button>
-                  <Input placeholder="ক্যাপশন" className="mt-1 h-6 text-xs w-20"
-                    value={captions[i]} onChange={(e) => { const c = [...captions]; c[i] = e.target.value; setCaptions(c); }} />
-                </div>
-              ))}
-              <label className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary">
-                <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
-              </label>
-            </div>
-          </div>
+          {/* Additional images with URL support */}
+          <MultiImageUploader images={images} onChange={setImages} label="অতিরিক্ত ছবি" />
 
           <div className="flex gap-3 pt-2">
             <Button onClick={() => handleSubmit("draft")} variant="secondary" disabled={loading || !title.trim()}>ড্রাফট সেভ</Button>
