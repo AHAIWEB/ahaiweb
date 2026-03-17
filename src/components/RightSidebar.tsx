@@ -6,9 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import LocationMapWidget from "./LocationMapWidget";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 
 const RightSidebar = () => {
   const { toast } = useToast();
