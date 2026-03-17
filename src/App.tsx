@@ -16,6 +16,7 @@ import MediaManager from "./pages/admin/MediaManager";
 import TagManager from "./pages/admin/TagManager";
 import ProfileEdit from "./pages/admin/ProfileEdit";
 import CategoryManager from "./pages/admin/CategoryManager";
+import RssFeedManager from "./pages/admin/RssFeedManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="tags" element={<TagManager />} />
               <Route path="profile" element={<ProfileEdit />} />
               <Route path="categories" element={<CategoryManager />} />
+              <Route path="rss-feeds" element={<RssFeedManager />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

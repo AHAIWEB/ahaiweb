@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen,
+  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen, Rss,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -15,6 +15,7 @@ const navItems = [
   { label: "মিডিয়া", icon: Image, path: "/admin/media" },
   { label: "ট্যাগ ও ম্যাপ", icon: Tag, path: "/admin/tags" },
   { label: "ক্যাটেগরি", icon: FolderOpen, path: "/admin/categories" },
+  { label: "RSS ফিড", icon: Rss, path: "/admin/rss-feeds" },
   { label: "প্রোফাইল", icon: User, path: "/admin/profile" },
 ];
 
