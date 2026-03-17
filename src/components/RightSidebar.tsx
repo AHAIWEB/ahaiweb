@@ -1,7 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Hash, Tag, Users, PenLine, Share2, Facebook, Twitter, Linkedin, Copy } from "lucide-react";
+import { Hash, Tag, Users, PenLine, Share2, Facebook, Twitter, Linkedin, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import LocationMapWidget from "./LocationMapWidget";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
