@@ -74,6 +74,14 @@ const MainContent = () => {
   const [travelRef, travelApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin.current]);
   const [familyRef, familyApi] = useEmblaCarousel({ loop: true, align: "center", containScroll: false }, [autoplayPlugin2.current]);
 
+  const { data: siteSections } = useQuery({
+    queryKey: ["site-sections"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_sections").select("*").order("sort_order");
+      return (data as any[]) || [];
+    },
+  });
+
   const { data: allCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
