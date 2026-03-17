@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface Category {
   id: string;
@@ -14,6 +15,7 @@ interface Category {
   icon: string | null;
   color: string | null;
   sort_order: number | null;
+  show_in_nav: boolean;
 }
 
 const CategoryManager = () => {
@@ -25,7 +27,7 @@ const CategoryManager = () => {
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("sort_order", { ascending: true });
-    setCategories(data || []);
+    setCategories((data as any) || []);
     setLoading(false);
   };
 
@@ -66,6 +68,12 @@ const CategoryManager = () => {
     if (error) { toast({ title: "ত্রুটি", description: error.message, variant: "destructive" }); return; }
     toast({ title: "মুছে ফেলা হয়েছে" });
     fetchCategories();
+  };
+
+  const toggleNav = async (id: string, current: boolean) => {
+    const { error } = await supabase.from("categories").update({ show_in_nav: !current } as any).eq("id", id);
+    if (error) { toast({ title: "ত্রুটি", description: error.message, variant: "destructive" }); return; }
+    setCategories((prev) => prev.map((c) => c.id === id ? { ...c, show_in_nav: !current } : c));
   };
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -124,7 +132,11 @@ const CategoryManager = () => {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5" title="মেনুতে দেখান">
+                      <span className="text-[10px] text-muted-foreground">মেনু</span>
+                      <Switch checked={cat.show_in_nav} onCheckedChange={() => toggleNav(cat.id, cat.show_in_nav)} />
+                    </div>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(cat)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
