@@ -20,19 +20,24 @@ const zodiacSigns = [
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
+  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const { user } = useAuth();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
 
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: categories } = useQuery({
-    queryKey: ["nav-categories"],
+  const { data: allCategories } = useQuery({
+    queryKey: ["nav-categories-all"],
     queryFn: async () => {
       const { data } = await supabase.from("categories").select("*").eq("show_in_nav", true).order("sort_order");
-      return data || [];
+      return (data || []) as any[];
     },
   });
+
+  // Build parent-child hierarchy
+  const parentCategories = allCategories?.filter((c: any) => !c.parent_id) || [];
+  const getChildren = (parentId: string) => allCategories?.filter((c: any) => c.parent_id === parentId) || [];
 
   const { data: dailyContent } = useQuery({
     queryKey: ["daily-content", today],
@@ -113,11 +118,41 @@ const Header = () => {
           <Button variant="default" size="sm" className="shrink-0 h-7 text-xs rounded-full">
             হোম
           </Button>
-          {categories?.map((cat) => (
-            <Button key={cat.id} variant="ghost" size="sm" className="shrink-0 h-7 text-xs rounded-full">
-              {cat.icon} {cat.name}
-            </Button>
-          ))}
+          {parentCategories.map((cat: any) => {
+            const children = getChildren(cat.id);
+            if (children.length > 0) {
+              return (
+                <div
+                  key={cat.id}
+                  className="relative shrink-0"
+                  onMouseEnter={() => setHoveredCat(cat.id)}
+                  onMouseLeave={() => setHoveredCat(null)}
+                >
+                  <Button variant="ghost" size="sm" className="h-7 text-xs rounded-full gap-1">
+                    {cat.icon} {cat.name} <ChevronDown className="h-3 w-3" />
+                  </Button>
+                  {hoveredCat === cat.id && (
+                    <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+                      {children.map((child: any) => (
+                        <button
+                          key={child.id}
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors flex items-center gap-2"
+                        >
+                          {child.icon && <span>{child.icon}</span>}
+                          {child.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <Button key={cat.id} variant="ghost" size="sm" className="shrink-0 h-7 text-xs rounded-full">
+                {cat.icon} {cat.name}
+              </Button>
+            );
+          })}
 
           {/* আজকের দিনে Dropdown */}
           <Popover>
