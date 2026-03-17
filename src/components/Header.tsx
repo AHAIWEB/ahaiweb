@@ -42,9 +42,9 @@ const Header = () => {
     },
   });
 
-  const onThisDay = dailyContent?.find((d: any) => d.content_type === "on_this_day")?.data;
-  const horoscope = dailyContent?.find((d: any) => d.content_type === "horoscope")?.data;
-  const quote = dailyContent?.find((d: any) => d.content_type === "quote")?.data;
+  const onThisDay = dailyContent?.find((d: any) => d.content_type === "on_this_day")?.data as any;
+  const horoscope = dailyContent?.find((d: any) => d.content_type === "horoscope")?.data as any;
+  const quote = dailyContent?.find((d: any) => d.content_type === "quote")?.data as any;
 
   const toggleDark = () => {
     setIsDark(!isDark);

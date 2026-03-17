@@ -4,12 +4,43 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Star, Quote, TrendingUp, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+
+const zodiacSigns = [
+  { name: "মেষ", symbol: "♈" }, { name: "বৃষ", symbol: "♉" }, { name: "মিথুন", symbol: "♊" },
+  { name: "কর্কট", symbol: "♋" }, { name: "সিংহ", symbol: "♌" }, { name: "কন্যা", symbol: "♍" },
+  { name: "তুলা", symbol: "♎" }, { name: "বৃশ্চিক", symbol: "♏" }, { name: "ধনু", symbol: "♐" },
+  { name: "মকর", symbol: "♑" }, { name: "কুম্ভ", symbol: "♒" }, { name: "মীন", symbol: "♓" },
+];
+
+const fallbackQuotes = [
+  { text: "জীবন হলো এক অদ্ভুত ভ্রমণ, যেখানে প্রতিটি মোড়ে নতুন অভিজ্ঞতা অপেক্ষা করছে।", author: "রবীন্দ্রনাথ ঠাকুর" },
+  { text: "শিক্ষা হলো সেই জিনিস যা আপনি স্কুলে যা শিখেছেন তা ভুলে যাওয়ার পরেও থেকে যায়।", author: "আলবার্ট আইনস্টাইন" },
+  { text: "ক্ষুধার রাজ্যে পৃথিবী গদ্যময়, পূর্ণিমার চাঁদ যেন ঝলসানো রুটি।", author: "সুকান্ত ভট্টাচার্য" },
+];
 
 const LeftSidebar = () => {
   const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const [selectedSign, setSelectedSign] = useState<string | null>(null);
+
   const todayBn = today.toLocaleDateString('bn-BD', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
+
+  const { data: dailyContent } = useQuery({
+    queryKey: ["daily-content-sidebar", todayStr],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_content").select("*").eq("date", todayStr);
+      return data || [];
+    },
+  });
+
+  const onThisDay = dailyContent?.find((d: any) => d.content_type === "on_this_day")?.data as any;
+  const horoscope = dailyContent?.find((d: any) => d.content_type === "horoscope")?.data as any;
+  const quoteData = dailyContent?.find((d: any) => d.content_type === "quote")?.data as any;
+  const todayQuote = quoteData?.text ? quoteData : fallbackQuotes[today.getDate() % fallbackQuotes.length];
+  const selectedHoroscope = horoscope?.signs?.find((s: any) => s.name === selectedSign);
 
   const { data: recentPosts } = useQuery({
     queryKey: ["sidebar-recent"],
@@ -50,13 +81,6 @@ const LeftSidebar = () => {
     catch { return d; }
   };
 
-  const quotes = [
-    { text: "জীবন হলো এক অদ্ভুত ভ্রমণ, যেখানে প্রতিটি মোড়ে নতুন অভিজ্ঞতা অপেক্ষা করছে।", author: "রবীন্দ্রনাথ ঠাকুর" },
-    { text: "শিক্ষা হলো সেই জিনিস যা আপনি স্কুলে যা শিখেছেন তা ভুলে যাওয়ার পরেও থেকে যায়।", author: "আলবার্ট আইনস্টাইন" },
-    { text: "ক্ষুধার রাজ্যে পৃথিবী গদ্যময়, পূর্ণিমার চাঁদ যেন ঝলসানো রুটি।", author: "সুকান্ত ভট্টাচার্য" },
-  ];
-  const todayQuote = quotes[today.getDate() % quotes.length];
-
   return (
     <div className="space-y-4">
       {/* আজকের দিন */}
@@ -75,23 +99,58 @@ const LeftSidebar = () => {
             <TabsContent value="today" className="mt-3">
               <p className="text-sm font-medium text-foreground">{todayBn}</p>
               <div className="mt-3 space-y-3">
-                <div className="border-l-2 border-accent pl-3">
-                  <p className="text-xs text-muted-foreground">১৯৭১</p>
-                  <p className="text-sm">স্বাধীনতা যুদ্ধের ঘটনা...</p>
-                </div>
-                <div className="border-l-2 border-accent pl-3">
-                  <p className="text-xs text-muted-foreground">১৯৫২</p>
-                  <p className="text-sm">ভাষা আন্দোলনের ইতিহাস...</p>
-                </div>
+                {onThisDay?.events?.length ? (
+                  onThisDay.events.map((e: any, i: number) => (
+                    <div key={i} className="border-l-2 border-accent pl-3">
+                      <p className="text-xs text-muted-foreground">{e.year}</p>
+                      <p className="text-sm">{e.event}</p>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="border-l-2 border-accent pl-3">
+                      <p className="text-xs text-muted-foreground">১৯৭১</p>
+                      <p className="text-sm">স্বাধীনতা যুদ্ধের ঘটনা...</p>
+                    </div>
+                    <div className="border-l-2 border-accent pl-3">
+                      <p className="text-xs text-muted-foreground">১৯৫২</p>
+                      <p className="text-sm">ভাষা আন্দোলনের ইতিহাস...</p>
+                    </div>
+                  </>
+                )}
               </div>
             </TabsContent>
 
             <TabsContent value="horoscope" className="mt-3">
-              <div className="text-center py-4">
-                <p className="text-3xl mb-2">♈</p>
-                <p className="font-medium text-sm">মেষ রাশি</p>
-                <p className="text-xs text-muted-foreground mt-2">আজ আপনার জন্য শুভ দিন। নতুন উদ্যোগ শুরু করার উপযুক্ত সময়।</p>
-              </div>
+              {selectedSign && selectedHoroscope ? (
+                <div>
+                  <button onClick={() => setSelectedSign(null)} className="text-xs text-primary mb-2 hover:underline">← সব রাশি</button>
+                  <div className="text-center py-2">
+                    <p className="text-3xl">{selectedHoroscope.symbol}</p>
+                    <p className="font-medium text-sm mt-1">{selectedHoroscope.name}</p>
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{selectedHoroscope.prediction}</p>
+                  </div>
+                </div>
+              ) : horoscope?.signs?.length ? (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {zodiacSigns.map((sign) => (
+                    <button
+                      key={sign.name}
+                      onClick={() => setSelectedSign(sign.name)}
+                      className="flex flex-col items-center p-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <span className="text-lg">{sign.symbol}</span>
+                      <span className="text-[10px] mt-0.5">{sign.name}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-3xl mb-2">♈</p>
+                  <p className="font-medium text-sm">মেষ রাশি</p>
+                  <p className="text-xs text-muted-foreground mt-2">আজ আপনার জন্য শুভ দিন। নতুন উদ্যোগ শুরু করার উপযুক্ত সময়।</p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="quotes" className="mt-3">
