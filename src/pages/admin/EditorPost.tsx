@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, X, Bold, Italic, Heading1, Heading2, List, Quote } from "lucide-react";
+import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 
 const EditorPost = () => {
   const { user } = useAuth();
@@ -26,6 +27,10 @@ const EditorPost = () => {
   const [images, setImages] = useState<File[]>([]);
   const [captions, setCaptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedUpazila, setSelectedUpazila] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -98,6 +103,23 @@ const EditorPost = () => {
 
       if (postError) throw postError;
 
+      // Save tags
+      if (selectedTags.length > 0) {
+        await supabase.from("post_tags").insert(
+          selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
+        );
+      }
+
+      // Save location
+      if (selectedDivision) {
+        await supabase.from("post_locations").insert({
+          post_id: post.id,
+          division_id: selectedDivision || null,
+          district_id: selectedDistrict || null,
+          upazila_id: selectedUpazila || null,
+        });
+      }
+
       // Upload additional images
       for (let i = 0; i < images.length; i++) {
         const file = images[i];
@@ -143,6 +165,17 @@ const EditorPost = () => {
               ))}
             </SelectContent>
           </Select>
+
+          <PostTagLocationPicker
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            selectedDivision={selectedDivision}
+            onDivisionChange={setSelectedDivision}
+            selectedDistrict={selectedDistrict}
+            onDistrictChange={setSelectedDistrict}
+            selectedUpazila={selectedUpazila}
+            onUpazilaChange={setSelectedUpazila}
+          />
 
           {/* Featured image */}
           <div>
