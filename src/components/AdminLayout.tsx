@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen, Rss,
+  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen, Rss, Settings2,
 } from "lucide-react";
 import { useState } from "react";
 
