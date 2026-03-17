@@ -65,6 +65,9 @@ const SlideDots = ({ emblaApi, count }: { emblaApi: any; count: number }) => {
 };
 
 const MainContent = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCategorySlug = searchParams.get("category");
+
   const [rssItems, setRssItems] = useState<RssItem[]>([]);
   const [rssLoading, setRssLoading] = useState(true);
   const [rssError, setRssError] = useState(false);
