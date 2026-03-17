@@ -43,6 +43,7 @@ const App = () => (
               <Route path="profile" element={<ProfileEdit />} />
               <Route path="categories" element={<CategoryManager />} />
               <Route path="rss-feeds" element={<RssFeedManager />} />
+              <Route path="site-customizer" element={<SiteCustomizer />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

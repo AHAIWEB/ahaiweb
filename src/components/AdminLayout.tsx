@@ -16,6 +16,7 @@ const navItems = [
   { label: "ট্যাগ ও ম্যাপ", icon: Tag, path: "/admin/tags" },
   { label: "ক্যাটেগরি", icon: FolderOpen, path: "/admin/categories" },
   { label: "RSS ফিড", icon: Rss, path: "/admin/rss-feeds" },
+  { label: "সাইট কাস্টমাইজ", icon: Settings2, path: "/admin/site-customizer" },
   { label: "প্রোফাইল", icon: User, path: "/admin/profile" },
 ];
 
