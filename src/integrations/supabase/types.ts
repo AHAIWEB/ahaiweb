@@ -21,6 +21,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          parent_id: string | null
           show_in_nav: boolean
           slug: string
           sort_order: number | null
@@ -31,6 +32,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          parent_id?: string | null
           show_in_nav?: boolean
           slug: string
           sort_order?: number | null
@@ -41,11 +43,20 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
           show_in_nav?: boolean
           slug?: string
           sort_order?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_content: {
         Row: {
