@@ -1,13 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { useSearchParams } from "react-router-dom";
 
 interface RssItem {
   title: string; link: string; description: string; pubDate: string; image: string; source: string; category: string;
@@ -64,6 +65,9 @@ const SlideDots = ({ emblaApi, count }: { emblaApi: any; count: number }) => {
 };
 
 const MainContent = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCategorySlug = searchParams.get("category");
+
   const [rssItems, setRssItems] = useState<RssItem[]>([]);
   const [rssLoading, setRssLoading] = useState(true);
   const [rssError, setRssError] = useState(false);
@@ -439,6 +443,109 @@ const MainContent = () => {
         return null;
     }
   };
+
+  // Active category info
+  const activeCategory = activeCategorySlug
+    ? allCategories?.find((c) => c.slug === activeCategorySlug)
+    : null;
+
+  // Get all posts matching a category (including children via post_categories)
+  const filteredPosts = activeCategory
+    ? posts?.filter((p) => {
+        if (p.category_id === activeCategory.id) return true;
+        if (p.post_categories?.some((pc) => pc.categories?.name === activeCategory.name)) return true;
+        // Also match child categories
+        const childCats = allCategories?.filter((c) => c.parent_id === activeCategory.id) || [];
+        return childCats.some((child) =>
+          p.category_id === child.id || p.post_categories?.some((pc) => pc.categories?.name === child.name)
+        );
+      }) || []
+    : [];
+
+  // If a category filter is active, show filtered view
+  if (activeCategorySlug && activeCategory) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs" onClick={() => setSearchParams({})}>
+            <ArrowLeft className="h-3.5 w-3.5" /> হোম
+          </Button>
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            {activeCategory.icon && <span>{activeCategory.icon}</span>}
+            {activeCategory.name}
+          </h2>
+          <Badge variant="outline" className="text-xs">{filteredPosts.length} পোস্ট</Badge>
+        </div>
+
+        {postsLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        ) : filteredPosts.length === 0 ? (
+          <Card className="news-card">
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground text-sm">এই ক্যাটেগরিতে কোনো পোস্ট নেই</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {/* Featured first post */}
+            {filteredPosts[0] && (
+              <Card className="news-card overflow-hidden">
+                <div className="relative group cursor-pointer">
+                  {filteredPosts[0].featured_image && (
+                    <div className="aspect-[16/9] overflow-hidden">
+                      <img src={filteredPosts[0].featured_image} alt={filteredPosts[0].title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    </div>
+                  )}
+                  <div className={`${filteredPosts[0].featured_image ? 'absolute bottom-0 left-0 right-0' : ''} p-4`}>
+                    <h3 className={`text-base font-bold leading-snug ${filteredPosts[0].featured_image ? 'text-white' : 'text-foreground'}`}>
+                      {filteredPosts[0].title}
+                    </h3>
+                    {filteredPosts[0].excerpt && (
+                      <p className={`text-xs mt-1.5 line-clamp-2 ${filteredPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                        {filteredPosts[0].excerpt}
+                      </p>
+                    )}
+                    <div className={`flex items-center gap-3 mt-2 text-xs ${filteredPosts[0].featured_image ? 'text-white/60' : 'text-muted-foreground'}`}>
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(filteredPosts[0].created_at)}</span>
+                      <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {filteredPosts[0].likes || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Remaining posts list */}
+            {filteredPosts.length > 1 && (
+              <Card className="news-card">
+                <CardContent className="p-0 divide-y divide-border">
+                  {filteredPosts.slice(1).map((post) => (
+                    <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
+                        {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(post.created_at)}</span>
+                          <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {post.likes || 0}</span>
+                        </div>
+                        <PostBadges post={post} />
+                      </div>
+                      {post.featured_image && (
+                        <div className="w-20 h-20 rounded-lg bg-muted shrink-0 overflow-hidden">
+                          <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // If site_sections loaded, render in order; otherwise fallback
   const orderedKeys = visibleSections.length > 0

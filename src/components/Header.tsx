@@ -2,7 +2,7 @@ import { Search, Bell, Moon, Sun, Menu, Settings, LogIn, Home, CalendarDays, Sta
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,9 @@ const Header = () => {
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const { user } = useAuth();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = location.pathname.startsWith("/admin");
+  const activeCategory = searchParams.get("category");
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -115,7 +117,12 @@ const Header = () => {
       {/* Category Nav */}
       {!isAdmin && (
         <nav className="max-w-7xl mx-auto px-4 pb-2 flex gap-1 overflow-x-auto text-sm scrollbar-hide">
-          <Button variant="default" size="sm" className="shrink-0 h-7 text-xs rounded-full">
+          <Button 
+            variant={!activeCategory ? "default" : "ghost"} 
+            size="sm" 
+            className="shrink-0 h-7 text-xs rounded-full"
+            onClick={() => setSearchParams({})}
+          >
             হোম
           </Button>
           {parentCategories.map((cat: any) => {
@@ -128,7 +135,12 @@ const Header = () => {
                   onMouseEnter={() => setHoveredCat(cat.id)}
                   onMouseLeave={() => setHoveredCat(null)}
                 >
-                  <Button variant="ghost" size="sm" className="h-7 text-xs rounded-full gap-1">
+                  <Button 
+                    variant={activeCategory === cat.slug ? "default" : "ghost"} 
+                    size="sm" 
+                    className="h-7 text-xs rounded-full gap-1"
+                    onClick={() => setSearchParams({ category: cat.slug })}
+                  >
                     {cat.icon} {cat.name} <ChevronDown className="h-3 w-3" />
                   </Button>
                   {hoveredCat === cat.id && (
@@ -137,6 +149,7 @@ const Header = () => {
                         <button
                           key={child.id}
                           className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors flex items-center gap-2"
+                          onClick={() => { setSearchParams({ category: child.slug }); setHoveredCat(null); }}
                         >
                           {child.icon && <span>{child.icon}</span>}
                           {child.name}
@@ -148,7 +161,13 @@ const Header = () => {
               );
             }
             return (
-              <Button key={cat.id} variant="ghost" size="sm" className="shrink-0 h-7 text-xs rounded-full">
+              <Button 
+                key={cat.id} 
+                variant={activeCategory === cat.slug ? "default" : "ghost"} 
+                size="sm" 
+                className="shrink-0 h-7 text-xs rounded-full"
+                onClick={() => setSearchParams({ category: cat.slug })}
+              >
                 {cat.icon} {cat.name}
               </Button>
             );
