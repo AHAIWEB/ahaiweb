@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, X, Bold, Italic, Heading1, Heading2, List, Quote } from "lucide-react";
@@ -21,31 +20,20 @@ const EditorPost = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [categoryId, setCategoryId] = useState("");
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
   const [featuredPreview, setFeaturedPreview] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [captions, setCaptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
 
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data } = await supabase.from("categories").select("*").order("sort_order");
-      return data || [];
-    },
-  });
-
   const handleFeaturedImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFeaturedImage(file);
-      setFeaturedPreview(URL.createObjectURL(file));
-    }
+    if (file) { setFeaturedImage(file); setFeaturedPreview(URL.createObjectURL(file)); }
   };
 
   const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,8 +50,7 @@ const EditorPost = () => {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selected = content.substring(start, end);
-    const newContent = content.substring(0, start) + prefix + selected + suffix + content.substring(end);
-    setContent(newContent);
+    setContent(content.substring(0, start) + prefix + selected + suffix + content.substring(end));
   };
 
   const handleSubmit = async (status: "draft" | "published") => {
@@ -72,7 +59,6 @@ const EditorPost = () => {
 
     try {
       const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
-
       let featuredImageUrl = "";
 
       if (featuredImage) {
@@ -93,7 +79,7 @@ const EditorPost = () => {
           content: content.trim(),
           excerpt: excerpt.trim() || content.trim().substring(0, 150),
           featured_image: featuredImageUrl || null,
-          category_id: categoryId || null,
+          category_id: selectedCategories[0] || null,
           post_type: "editor" as const,
           status,
           published_at: status === "published" ? new Date().toISOString() : null,
@@ -103,14 +89,19 @@ const EditorPost = () => {
 
       if (postError) throw postError;
 
-      // Save tags
+      // Save multiple categories
+      if (selectedCategories.length > 0) {
+        await supabase.from("post_categories").insert(
+          selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
+        );
+      }
+
       if (selectedTags.length > 0) {
         await supabase.from("post_tags").insert(
           selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
         );
       }
 
-      // Save location
       if (selectedDivision) {
         await supabase.from("post_locations").insert({
           post_id: post.id,
@@ -125,16 +116,11 @@ const EditorPost = () => {
         const file = images[i];
         const filePath = `${user.id}/${post.id}/${Date.now()}-${file.name}`;
         const { error: uploadError } = await supabase.storage.from("media").upload(filePath, file);
-
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
           await supabase.from("media").insert({
-            user_id: user.id,
-            post_id: post.id,
-            file_url: urlData.publicUrl,
-            file_name: file.name,
-            caption: captions[i] || null,
-            sort_order: i,
+            user_id: user.id, post_id: post.id, file_url: urlData.publicUrl,
+            file_name: file.name, caption: captions[i] || null, sort_order: i,
           });
         }
       }
@@ -157,18 +143,11 @@ const EditorPost = () => {
         <CardContent className="p-5 space-y-4">
           <Input placeholder="শিরোনাম" className="text-lg font-semibold" value={title} onChange={(e) => setTitle(e.target.value)} />
 
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger><SelectValue placeholder="লেবেল নির্বাচন করুন" /></SelectTrigger>
-            <SelectContent>
-              {categories?.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>{cat.icon} {cat.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <PostTagLocationPicker
             selectedTags={selectedTags}
             onTagsChange={setSelectedTags}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
             selectedDivision={selectedDivision}
             onDivisionChange={setSelectedDivision}
             selectedDistrict={selectedDistrict}
@@ -207,15 +186,7 @@ const EditorPost = () => {
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => insertFormatting("> ")}><Quote className="h-4 w-4" /></Button>
           </div>
 
-          <Textarea
-            id="editor-content"
-            placeholder="কনটেন্ট লিখুন... (মার্কডাউন সাপোর্টেড)"
-            rows={12}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="font-mono text-sm"
-          />
-
+          <Textarea id="editor-content" placeholder="কনটেন্ট লিখুন... (মার্কডাউন সাপোর্টেড)" rows={12} value={content} onChange={(e) => setContent(e.target.value)} className="font-mono text-sm" />
           <Input placeholder="সারসংক্ষেপ (ঐচ্ছিক)" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
 
           {/* Additional images */}

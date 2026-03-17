@@ -2,12 +2,24 @@ import { Search, Bell, Moon, Sun, Menu, Settings, LogIn, Home } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
   const { user } = useAuth();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data } = await supabase.from("categories").select("*").order("sort_order");
+      return data || [];
+    },
+  });
 
   const toggleDark = () => {
     setIsDark(!isDark);
@@ -32,10 +44,10 @@ const Header = () => {
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight">
+          <Link to="/" className="text-2xl md:text-3xl font-display font-black tracking-tight">
             <span className="text-primary">AHAi</span>
             <span className="text-foreground">WEB</span>
-          </h1>
+          </Link>
         </div>
 
         <div className="hidden md:flex flex-1 max-w-md">
@@ -49,13 +61,22 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-1">
-          {user ? (
+          {isAdmin ? (
+            <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
+              <Link to="/"><Home className="h-4 w-4" /> মূলসাইট</Link>
+            </Button>
+          ) : user ? (
             <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
               <Link to="/admin"><Settings className="h-4 w-4" /> অ্যাডমিন</Link>
             </Button>
           ) : (
             <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
               <Link to="/login"><LogIn className="h-4 w-4" /> লগইন</Link>
+            </Button>
+          )}
+          {user && isAdmin && (
+            <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
+              <Link to="/admin"><Settings className="h-4 w-4" /> অ্যাডমিন</Link>
             </Button>
           )}
           <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -67,19 +88,24 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Category Nav */}
-      <nav className="max-w-7xl mx-auto px-4 pb-2 flex gap-1 overflow-x-auto text-sm scrollbar-hide">
-        {["হোম", "আমার ক্যামেরা", "ভ্রমণ", "ফ্যামিলি", "লেখালেখি", "সংবাদ", "ভিডিও", "পিপল", "কলম", "ম্যাপ"].map((item, i) => (
-          <Button
-            key={item}
-            variant={i === 0 ? "default" : "ghost"}
-            size="sm"
-            className="shrink-0 h-7 text-xs rounded-full"
-          >
-            {item}
+      {/* Category Nav - dynamic from DB */}
+      {!isAdmin && (
+        <nav className="max-w-7xl mx-auto px-4 pb-2 flex gap-1 overflow-x-auto text-sm scrollbar-hide">
+          <Button variant="default" size="sm" className="shrink-0 h-7 text-xs rounded-full">
+            হোম
           </Button>
-        ))}
-      </nav>
+          {categories?.map((cat) => (
+            <Button
+              key={cat.id}
+              variant="ghost"
+              size="sm"
+              className="shrink-0 h-7 text-xs rounded-full"
+            >
+              {cat.icon} {cat.name}
+            </Button>
+          ))}
+        </nav>
+      )}
     </header>
   );
 };
