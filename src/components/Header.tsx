@@ -49,6 +49,15 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-1">
+          {user ? (
+            <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
+              <Link to="/admin"><Settings className="h-4 w-4" /> অ্যাডমিন</Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" className="h-9 text-xs gap-1" asChild>
+              <Link to="/login"><LogIn className="h-4 w-4" /> লগইন</Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-9 w-9">
             <Bell className="h-4 w-4" />
           </Button>
