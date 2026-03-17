@@ -224,37 +224,70 @@ const MainContent = () => {
         </CardContent>
       </Card>
 
-      {/* ✍️ লেখালেখি */}
-      <Card className="news-card">
+      {/* ✍️ লেখালেখি — Magazine Style */}
+      <Card className="news-card overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="section-title text-base !mb-0">✍️ লেখালেখি</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="p-0">
           {postsLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
           ) : writingPosts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">কোনো লেখা পোস্ট নেই</p>
           ) : (
-            writingPosts.slice(0, 5).map((post, idx) => (
-              <div key={post.id} className="group cursor-pointer border-b border-border last:border-0 pb-3 last:pb-0">
-                <div className="flex gap-3">
-                  {idx === 0 && post.featured_image && (
-                    <div className="w-20 h-20 rounded-lg bg-muted shrink-0 overflow-hidden">
-                      <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+            <div>
+              {/* Hero writing post */}
+              {writingPosts[0] && (
+                <div className="relative group cursor-pointer">
+                  {writingPosts[0].featured_image && (
+                    <div className="aspect-[16/9] overflow-hidden">
+                      <img src={writingPosts[0].featured_image} alt={writingPosts[0].title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                     </div>
                   )}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">{post.title}</h3>
-                    {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(post.created_at)}</span>
-                      <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {post.likes || 0}</span>
+                  <div className={`${writingPosts[0].featured_image ? 'absolute bottom-0 left-0 right-0' : ''} p-4`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-primary/90 text-primary-foreground text-[10px] border-0">✍️ লেখালেখি</Badge>
+                      <span className={`text-[10px] ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                        {formatDate(writingPosts[0].created_at)}
+                      </span>
                     </div>
-                    <PostBadges post={post} />
+                    <h3 className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors`}>
+                      {writingPosts[0].title}
+                    </h3>
+                    {writingPosts[0].excerpt && (
+                      <p className={`text-xs mt-1.5 line-clamp-2 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                        {writingPosts[0].excerpt}
+                      </p>
+                    )}
                   </div>
                 </div>
+              )}
+              {/* Rest of writing posts */}
+              <div className="divide-y divide-border">
+                {writingPosts.slice(1, 5).map((post, idx) => (
+                  <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0 mt-0.5">
+                      {idx + 2}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(post.created_at)}</span>
+                        <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {post.likes || 0}</span>
+                      </div>
+                      <PostBadges post={post} />
+                    </div>
+                    {post.featured_image && (
+                      <div className="w-16 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
+                        <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))
+            </div>
           )}
         </CardContent>
       </Card>
