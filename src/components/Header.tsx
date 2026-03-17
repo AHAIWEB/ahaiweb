@@ -23,7 +23,9 @@ const Header = () => {
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const { user } = useAuth();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = location.pathname.startsWith("/admin");
+  const activeCategory = searchParams.get("category");
 
   const today = new Date().toISOString().split("T")[0];
 
