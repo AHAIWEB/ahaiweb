@@ -18,13 +18,6 @@ const RightSidebar = () => {
     },
   });
 
-  const { data: divisions } = useQuery({
-    queryKey: ["public-divisions"],
-    queryFn: async () => {
-      const { data } = await supabase.from("divisions").select("*").order("bn_name");
-      return data || [];
-    },
-  });
 
   const { data: categories } = useQuery({
     queryKey: ["public-categories"],
