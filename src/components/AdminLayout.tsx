@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag,
+  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +14,8 @@ const navItems = [
   { label: "এডিটর পোস্ট", icon: FileText, path: "/admin/editor-post" },
   { label: "মিডিয়া", icon: Image, path: "/admin/media" },
   { label: "ট্যাগ ও ম্যাপ", icon: Tag, path: "/admin/tags" },
+  { label: "ক্যাটেগরি", icon: FolderOpen, path: "/admin/categories" },
+  { label: "প্রোফাইল", icon: User, path: "/admin/profile" },
 ];
 
 const AdminLayout = () => {
@@ -33,7 +35,6 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform lg:relative lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -67,27 +68,17 @@ const AdminLayout = () => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border space-y-1">
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted"
-          >
+          <Link to="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted">
             <Home className="h-4 w-4" /> হোমপেজে যান
           </Link>
-          <button
-            onClick={signOut}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 w-full"
-          >
+          <button onClick={signOut} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 w-full">
             <LogOut className="h-4 w-4" /> লগআউট
           </button>
         </div>
       </aside>
 
-      {/* Overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
-      )}
+      {mobileOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="h-14 border-b border-border flex items-center px-4 gap-3 bg-card">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>

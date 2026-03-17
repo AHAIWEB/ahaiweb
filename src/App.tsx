@@ -14,6 +14,8 @@ import UrlPost from "./pages/admin/UrlPost";
 import EditorPost from "./pages/admin/EditorPost";
 import MediaManager from "./pages/admin/MediaManager";
 import TagManager from "./pages/admin/TagManager";
+import ProfileEdit from "./pages/admin/ProfileEdit";
+import CategoryManager from "./pages/admin/CategoryManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
               <Route path="editor-post" element={<EditorPost />} />
               <Route path="media" element={<MediaManager />} />
               <Route path="tags" element={<TagManager />} />
+              <Route path="profile" element={<ProfileEdit />} />
+              <Route path="categories" element={<CategoryManager />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
