@@ -13,7 +13,8 @@ const RightSidebar = () => {
   const { data: siteSections } = useQuery({
     queryKey: ["site-sections-right"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_sections").select("*").eq("zone" as any, "right_sidebar").order("sort_order");
+      const { data } = await supabase.from("site_sections").select("*").order("sort_order");
+      return ((data as any[]) || []).filter((s: any) => s.zone === "right_sidebar");
       return (data as any[]) || [];
     },
   });

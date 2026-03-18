@@ -31,7 +31,8 @@ const LeftSidebar = () => {
   const { data: siteSections } = useQuery({
     queryKey: ["site-sections-left"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_sections").select("*").eq("zone" as any, "left_sidebar").order("sort_order");
+      const { data } = await supabase.from("site_sections").select("*").order("sort_order");
+      return ((data as any[]) || []).filter((s: any) => s.zone === "left_sidebar");
       return (data as any[]) || [];
     },
   });
