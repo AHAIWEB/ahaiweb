@@ -76,10 +76,12 @@ const MainContent = () => {
   const autoplayPlugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: false }));
   const autoplayPlugin2 = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
   const autoplayPlugin3 = useRef(Autoplay({ delay: 3500, stopOnInteraction: false }));
+  const autoplayPlugin4 = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
   const [travelRef, travelApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin.current]);
   const [familyRef, familyApi] = useEmblaCarousel({ loop: true, align: "center", containScroll: false }, [autoplayPlugin2.current]);
   const [videoRef, videoApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin3.current]);
+  const [cameraRef, cameraApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin4.current]);
 
   const { data: siteSections } = useQuery({
     queryKey: ["site-sections"],
@@ -245,26 +247,35 @@ const MainContent = () => {
 
       case "camera":
         return (
-          <Card className="news-card" key="camera">
-            <CardHeader className="pb-2">
+          <Card className="news-card overflow-hidden" key="camera">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="section-title text-base !mb-0">📸 আমার ক্যামেরা</CardTitle>
+              <SlideControls emblaApi={cameraApi} />
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-0 pb-3">
               {postsLoading ? (
                 <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
               ) : photoPosts.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">কোনো ছবি পোস্ট নেই</p>
               ) : (
-                <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-                  {photoPosts.slice(0, 8).map((p) => (
-                    <Link key={p.id} to={`/post/${p.slug}`} className="min-w-[220px] h-[180px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
-                      <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                        <p className="text-white text-sm font-medium line-clamp-2">{p.title}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                <>
+                  <div className="overflow-hidden" ref={cameraRef}>
+                    <div className="flex">
+                      {photoPosts.slice(0, 8).map((p) => (
+                        <div key={p.id} className="flex-[0_0_75%] min-w-0 pl-4 first:pl-4">
+                          <Link to={`/post/${p.slug}`} className="relative rounded-xl overflow-hidden aspect-[4/3] group cursor-pointer block">
+                            <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                              <p className="text-white text-sm font-bold drop-shadow-lg line-clamp-2">{p.title}</p>
+                            </div>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <SlideDots emblaApi={cameraApi} count={Math.min(photoPosts.length, 8)} />
+                </>
               )}
             </CardContent>
           </Card>
