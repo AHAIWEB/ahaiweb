@@ -37,7 +37,9 @@ const UrlPost = () => {
       if (!error && data) {
         if (data.title && !title) setTitle(data.title);
         if (data.image && !imageUrl) setImageUrl(data.image);
-        if (data.description && !content) setContent(data.description);
+        // Prefer full content over description
+        if (data.content && !content) setContent(data.content);
+        else if (data.description && !content) setContent(data.description);
         if (data.siteName && !sourceName) setSourceName(data.siteName);
         toast({ title: "ফেচ সফল!", description: "মেটাডাটা আনা হয়েছে" });
       }

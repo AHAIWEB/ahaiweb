@@ -305,8 +305,11 @@ const MainContent = () => {
       case "writing":
         return (
           <Card className="news-card overflow-hidden" key="writing">
-            <CardHeader className="pb-2">
-              <CardTitle className="section-title text-base !mb-0">✍️ লেখালেখি</CardTitle>
+            <CardHeader className="pb-2 border-b border-primary/20">
+              <CardTitle className="section-title text-base !mb-0 flex items-center gap-2">
+                <span className="w-1 h-5 bg-primary rounded-full" />
+                ✍️ লেখালেখি
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {postsLoading ? (
@@ -314,56 +317,58 @@ const MainContent = () => {
               ) : writingPosts.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">কোনো লেখা পোস্ট নেই</p>
               ) : (
-                <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                  {/* Lead story - full width on mobile, left col on md */}
                   {writingPosts[0] && (
-                    <div className="relative group cursor-pointer">
-                      {writingPosts[0].featured_image && (
-                        <div className="aspect-[16/9] overflow-hidden">
-                          <img src={writingPosts[0].featured_image} alt={writingPosts[0].title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                        </div>
-                      )}
-                      <div className={`${writingPosts[0].featured_image ? 'absolute bottom-0 left-0 right-0' : ''} p-4`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className="bg-primary/90 text-primary-foreground text-[10px] border-0">✍️ লেখালেখি</Badge>
-                          <span className={`text-[10px] ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                    <Link to={`/post/${writingPosts[0].slug}`} className="group block md:row-span-3 md:border-r border-b md:border-b-0 border-border">
+                      <div className="relative h-full">
+                        {writingPosts[0].featured_image && (
+                          <div className="aspect-[4/3] md:aspect-auto md:h-full overflow-hidden">
+                            <img src={writingPosts[0].featured_image} alt={writingPosts[0].title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                          </div>
+                        )}
+                        <div className={`${writingPosts[0].featured_image ? 'absolute bottom-0 left-0 right-0' : ''} p-5`}>
+                          <Badge className="bg-accent text-accent-foreground text-[10px] border-0 mb-2">✍️ প্রধান লেখা</Badge>
+                          <h3 className={`text-lg font-extrabold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors`}>
+                            {writingPosts[0].title}
+                          </h3>
+                          {writingPosts[0].excerpt && (
+                            <p className={`text-xs mt-2 line-clamp-3 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
+                              {writingPosts[0].excerpt}
+                            </p>
+                          )}
+                          <span className={`text-[10px] mt-2 block ${writingPosts[0].featured_image ? 'text-white/50' : 'text-muted-foreground'}`}>
                             {formatDate(writingPosts[0].created_at)}
                           </span>
                         </div>
-                        <Link to={`/post/${writingPosts[0].slug}`} className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors hover:underline`}>
-                          {writingPosts[0].title}
-                        </Link>
-                        {writingPosts[0].excerpt && (
-                          <p className={`text-xs mt-1.5 line-clamp-2 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
-                            {writingPosts[0].excerpt}
-                          </p>
-                        )}
                       </div>
-                    </div>
+                    </Link>
                   )}
-                  <div className="divide-y divide-border">
-                    {writingPosts.slice(1, 5).map((post, idx) => (
-                      <Link key={post.id} to={`/post/${post.slug}`} className="group block cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0 mt-0.5">
-                          {idx + 2}
-                        </div>
+                  {/* Right column items - magazine list style */}
+                  {writingPosts.slice(1, 4).map((post, idx) => (
+                    <Link key={post.id} to={`/post/${post.slug}`}
+                      className="group flex gap-3 p-4 border-b border-border last:border-b-0 hover:bg-accent/5 transition-colors">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <span className="text-2xl font-black text-primary/20 leading-none mt-0.5 select-none">{String(idx + 2).padStart(2, '0')}</span>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(post.created_at)}</span>
-                            <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {post.likes || 0}</span>
+                          {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{post.excerpt}</p>}
+                          <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+                            <Clock className="h-2.5 w-2.5" /> {formatDate(post.created_at)}
+                            <span className="mx-1">·</span>
+                            <Heart className="h-2.5 w-2.5" /> {post.likes || 0}
                           </div>
-                          <PostBadges post={post} />
                         </div>
-                        {post.featured_image && (
-                          <div className="w-16 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
-                            <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
+                      </div>
+                      {post.featured_image && (
+                        <div className="w-20 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
+                          <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        </div>
+                      )}
+                    </Link>
+                  ))}
                 </div>
               )}
             </CardContent>
