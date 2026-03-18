@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight, ArrowLeft, Play } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -130,6 +131,7 @@ const MainContent = () => {
     return posts?.filter((p) => p.category_id === cat.id || p.post_categories?.some((pc) => pc.categories?.name === cat.name)) || [];
   };
 
+  const videoPosts = getPostsByCategory("ভিডিও");
   const travelPosts = getPostsByCategory("ভ্রমণ");
   const familyPosts = getPostsByCategory("ফ্যামিলি");
 
@@ -329,9 +331,9 @@ const MainContent = () => {
                             {formatDate(writingPosts[0].created_at)}
                           </span>
                         </div>
-                        <h3 className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors`}>
+                        <Link to={`/post/${writingPosts[0].slug}`} className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors hover:underline`}>
                           {writingPosts[0].title}
-                        </h3>
+                        </Link>
                         {writingPosts[0].excerpt && (
                           <p className={`text-xs mt-1.5 line-clamp-2 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
                             {writingPosts[0].excerpt}
@@ -342,7 +344,7 @@ const MainContent = () => {
                   )}
                   <div className="divide-y divide-border">
                     {writingPosts.slice(1, 5).map((post, idx) => (
-                      <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                      <Link key={post.id} to={`/post/${post.slug}`} className="group block cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0 mt-0.5">
                           {idx + 2}
                         </div>
@@ -359,7 +361,7 @@ const MainContent = () => {
                             <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
                           </div>
                         )}
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -408,7 +410,7 @@ const MainContent = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {urlPosts.slice(0, 5).map((post) => (
-                <a key={post.id} href={post.source_url || "#"} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
+                <Link key={post.id} to={`/post/${post.slug}`} className="group block border-b border-border last:border-0 pb-3 last:pb-0">
                   <div className="flex gap-3">
                     {post.featured_image && (
                       <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
@@ -426,14 +428,79 @@ const MainContent = () => {
                       <PostBadges post={post} />
                     </div>
                   </div>
-                </a>
+                </Link>
               ))}
             </CardContent>
           </Card>
         ) : null;
 
+      case "video":
+        return (
+          <Card className="news-card" key="video">
+            <CardHeader className="pb-2">
+              <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
+                <Play className="h-4 w-4" /> ভিডিও
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {videoPosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">কোনো ভিডিও পোস্ট নেই</p>
+              ) : (
+                <div className="space-y-3">
+                  {videoPosts.slice(0, 5).map((post) => (
+                    <Link key={post.id} to={`/post/${post.slug}`} className="group flex gap-3 border-b border-border last:border-0 pb-3 last:pb-0">
+                      {post.featured_image && (
+                        <div className="w-24 h-16 rounded-md bg-muted shrink-0 overflow-hidden relative">
+                          <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="h-5 w-5 text-white fill-white" />
+                          </div>
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h4>
+                        <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+
       default:
-        // Handle ad slots or custom sections
+        // Handle category sections dynamically
+        if (sectionKey.startsWith("cat-")) {
+          const catSlug = sectionKey.replace("cat-", "");
+          const catPosts = getPostsByCategory(catSlug);
+          const sectionInfo = visibleSections.find((s: any) => s.section_key === sectionKey);
+          if (catPosts.length === 0) return null;
+          return (
+            <Card className="news-card" key={sectionKey}>
+              <CardHeader className="pb-2">
+                <CardTitle className="section-title text-base !mb-0">{sectionInfo?.icon} {sectionInfo?.label}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {catPosts.slice(0, 5).map((post) => (
+                  <Link key={post.id} to={`/post/${post.slug}`} className="group flex gap-3 border-b border-border last:border-0 pb-2 last:pb-0">
+                    {post.featured_image && (
+                      <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
+                        <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h4>
+                      {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{post.excerpt}</p>}
+                      <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          );
+        }
+        // Handle ad slots
         const section = visibleSections.find((s: any) => s.section_key === sectionKey);
         if (section?.config?.type === "ad" && section?.config?.ad_code) {
           return (
@@ -489,6 +556,7 @@ const MainContent = () => {
           <div className="space-y-3">
             {/* Featured first post */}
             {filteredPosts[0] && (
+              <Link to={`/post/${filteredPosts[0].slug}`} className="block">
               <Card className="news-card overflow-hidden">
                 <div className="relative group cursor-pointer">
                   {filteredPosts[0].featured_image && (
@@ -514,6 +582,7 @@ const MainContent = () => {
                   </div>
                 </div>
               </Card>
+              </Link>
             )}
 
             {/* Remaining posts list */}
@@ -521,7 +590,7 @@ const MainContent = () => {
               <Card className="news-card">
                 <CardContent className="p-0 divide-y divide-border">
                   {filteredPosts.slice(1).map((post) => (
-                    <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                    <Link key={post.id} to={`/post/${post.slug}`} className="group block cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
                       <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
                         {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
@@ -536,7 +605,7 @@ const MainContent = () => {
                           <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
                         </div>
                       )}
-                    </div>
+                    </Link>
                   ))}
                 </CardContent>
               </Card>

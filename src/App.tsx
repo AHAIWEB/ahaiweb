@@ -18,6 +18,7 @@ import ProfileEdit from "./pages/admin/ProfileEdit";
 import CategoryManager from "./pages/admin/CategoryManager";
 import RssFeedManager from "./pages/admin/RssFeedManager";
 import SiteCustomizer from "./pages/admin/SiteCustomizer";
+import PostDetail from "./pages/PostDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="rss-feeds" element={<RssFeedManager />} />
               <Route path="site-customizer" element={<SiteCustomizer />} />
             </Route>
+            <Route path="/post/:slug" element={<PostDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
