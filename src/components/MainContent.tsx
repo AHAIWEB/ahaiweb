@@ -124,6 +124,7 @@ const MainContent = () => {
   const photoPosts = posts?.filter((p) => p.post_type === "quick" && p.featured_image) || [];
   const writingPosts = posts?.filter((p) => p.post_type === "editor") || [];
   const urlPosts = posts?.filter((p) => p.post_type === "url") || [];
+  const videoPosts = getPostsByCategory("ভিডিও");
 
   const getPostsByCategory = (slug: string) => {
     const cat = allCategories?.find((c) => c.slug === slug || c.name.includes(slug));
