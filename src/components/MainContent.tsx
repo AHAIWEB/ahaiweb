@@ -284,17 +284,31 @@ const MainContent = () => {
                 <div className="flex">
                   {travelData.map((item) => (
                     <div key={item.id} className="flex-[0_0_85%] min-w-0 pl-4 first:pl-4">
-                      <div className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer">
-                        <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <p className="text-white text-sm font-bold drop-shadow-lg">{item.title}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Plane className="h-3 w-3 text-white/70" />
-                            <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
+                      {item.slug ? (
+                        <Link to={`/post/${item.slug}`} className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer block">
+                          <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <p className="text-white text-sm font-bold drop-shadow-lg group-hover:underline">{item.title}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Plane className="h-3 w-3 text-white/70" />
+                              <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
+                            </div>
+                          </div>
+                        </Link>
+                      ) : (
+                        <div className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer">
+                          <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <p className="text-white text-sm font-bold drop-shadow-lg">{item.title}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Plane className="h-3 w-3 text-white/70" />
+                              <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
