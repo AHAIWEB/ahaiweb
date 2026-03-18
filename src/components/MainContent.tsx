@@ -179,7 +179,7 @@ const MainContent = () => {
   const rssCategories = ["দেশীয়", "আন্তর্জাতিক", "গ্রামের খবর"];
   const getRssByCategory = (cat: string) => rssItems.filter((item) => item.category === cat).slice(0, 5);
 
-  const visibleSections = siteSections?.filter((s: any) => s.is_visible) || [];
+  const visibleSections = siteSections?.filter((s: any) => s.is_visible && (s.zone === 'main' || !s.zone)) || [];
 
   const renderSection = (sectionKey: string) => {
     switch (sectionKey) {
