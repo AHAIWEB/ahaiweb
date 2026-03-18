@@ -138,12 +138,12 @@ const MainContent = () => {
   const familyPosts = getPostsByCategory("ফ্যামিলি");
 
   const travelData = travelPosts.length > 0
-    ? travelPosts.slice(0, 6).map((p) => ({ id: p.id, title: p.title, img: p.featured_image || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" }))
+    ? travelPosts.slice(0, 6).map((p) => ({ id: p.id, title: p.title, slug: p.slug, img: p.featured_image || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" }))
     : [
-      { id: "d1", title: "কক্সবাজার সমুদ্র সৈকত", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" },
-      { id: "d2", title: "সুন্দরবন ম্যানগ্রোভ", img: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=600&h=400&fit=crop" },
-      { id: "d3", title: "সাজেক ভ্যালি", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" },
-      { id: "d4", title: "রাতারগুল জলাবন", img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=400&fit=crop" },
+      { id: "d1", title: "কক্সবাজার সমুদ্র সৈকত", slug: "", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" },
+      { id: "d2", title: "সুন্দরবন ম্যানগ্রোভ", slug: "", img: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=600&h=400&fit=crop" },
+      { id: "d3", title: "সাজেক ভ্যালি", slug: "", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" },
+      { id: "d4", title: "রাতারগুল জলাবন", slug: "", img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=400&fit=crop" },
     ];
 
   const familyData = familyPosts.length > 0
