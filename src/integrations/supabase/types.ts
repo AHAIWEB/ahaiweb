@@ -468,6 +468,7 @@ export type Database = {
           section_key: string
           sort_order: number
           updated_at: string
+          zone: string
         }
         Insert: {
           config?: Json | null
@@ -479,6 +480,7 @@ export type Database = {
           section_key: string
           sort_order?: number
           updated_at?: string
+          zone?: string
         }
         Update: {
           config?: Json | null
@@ -490,6 +492,7 @@ export type Database = {
           section_key?: string
           sort_order?: number
           updated_at?: string
+          zone?: string
         }
         Relationships: []
       }
