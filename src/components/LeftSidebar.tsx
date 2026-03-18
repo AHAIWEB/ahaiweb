@@ -226,21 +226,34 @@ const LeftSidebar = () => {
         return (
           <Card className="news-card" key="left_labels">
             <CardHeader className="pb-2">
-              <CardTitle className="section-title text-base !mb-0">🏷️ লেবেল</CardTitle>
+              <CardTitle className="section-title text-base !mb-0">🏷️ ক্যাটেগরি</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-1.5">
-                {categories?.map((cat) => (
-                  <Badge key={cat.id}
-                    className="text-xs cursor-pointer hover:opacity-80 transition-opacity border-0"
-                    style={{
-                      backgroundColor: cat.color ? `${cat.color}20` : undefined,
-                      color: cat.color || undefined,
-                      border: `1px solid ${cat.color || 'hsl(var(--border))'}`,
-                    }}>
-                    {cat.icon} {cat.name}
-                  </Badge>
-                ))}
+              <div className="space-y-0.5">
+                {categories?.filter((c) => !c.parent_id).map((cat) => {
+                  const children = categories?.filter((ch) => ch.parent_id === cat.id) || [];
+                  return (
+                    <div key={cat.id}>
+                      <a href={`/?category=${cat.slug}`}
+                        className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted transition-colors text-sm font-medium">
+                        {cat.icon && <span>{cat.icon}</span>}
+                        <span className="flex-1">{cat.name}</span>
+                        {cat.color && <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />}
+                      </a>
+                      {children.length > 0 && (
+                        <div className="ml-6 space-y-0.5">
+                          {children.map((child) => (
+                            <a key={child.id} href={`/?category=${child.slug}`}
+                              className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-muted transition-colors text-xs text-muted-foreground hover:text-foreground">
+                              {child.icon && <span>{child.icon}</span>}
+                              {child.name}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
