@@ -343,7 +343,7 @@ const MainContent = () => {
                   )}
                   <div className="divide-y divide-border">
                     {writingPosts.slice(1, 5).map((post, idx) => (
-                      <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                      <Link key={post.id} to={`/post/${post.slug}`} className="group block cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0 mt-0.5">
                           {idx + 2}
                         </div>
