@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Loader2, Link2 } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 import MultiImageUploader, { ImageItem } from "@/components/MultiImageUploader";
 
