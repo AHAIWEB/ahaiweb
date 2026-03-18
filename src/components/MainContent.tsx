@@ -590,7 +590,7 @@ const MainContent = () => {
               <Card className="news-card">
                 <CardContent className="p-0 divide-y divide-border">
                   {filteredPosts.slice(1).map((post) => (
-                    <div key={post.id} className="group cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
+                    <Link key={post.id} to={`/post/${post.slug}`} className="group block cursor-pointer px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3">
                       <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight line-clamp-2">{post.title}</h4>
                         {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
@@ -605,7 +605,7 @@ const MainContent = () => {
                           <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
                         </div>
                       )}
-                    </div>
+                    </Link>
                   ))}
                 </CardContent>
               </Card>
