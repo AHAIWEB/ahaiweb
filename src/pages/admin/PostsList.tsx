@@ -1,16 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
-import { Plus, Trash2, Edit, Eye } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Trash2, Edit, Eye, Pencil, Star, StarOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 const PostsList = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ["admin-posts"],
@@ -50,6 +51,24 @@ const PostsList = () => {
     }
   };
 
+  const toggleFeatured = async (id: string, currentFeatured: boolean) => {
+    const { error } = await supabase.from("posts").update({ is_featured: !currentFeatured }).eq("id", id);
+    if (!error) {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+      toast({ title: !currentFeatured ? "⭐ ফিচার্ড করা হয়েছে" : "ফিচার্ড সরানো হয়েছে" });
+    }
+  };
+
+  const handleEdit = (post: any) => {
+    if (post.post_type === "quick") {
+      navigate(`/admin/quick-post?edit=${post.id}`);
+    } else if (post.post_type === "url") {
+      navigate(`/admin/url-post?edit=${post.id}`);
+    } else {
+      navigate(`/admin/editor-post?edit=${post.id}`);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -69,7 +88,7 @@ const PostsList = () => {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       {post.categories && (
                         <Badge variant="outline" className="text-xs">
                           {(post.categories as any).icon} {(post.categories as any).name}
@@ -81,6 +100,7 @@ const PostsList = () => {
                       <Badge variant="outline" className="text-xs">
                         {post.post_type === "quick" ? "কুইক" : post.post_type === "url" ? "URL" : "এডিটর"}
                       </Badge>
+                      {post.is_featured && <Badge className="text-xs bg-yellow-500/20 text-yellow-600 border-yellow-500/30">⭐ ফিচার্ড</Badge>}
                     </div>
                     <h3 className="font-semibold text-sm truncate">{post.title}</h3>
                     {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{post.excerpt}</p>}
@@ -89,10 +109,16 @@ const PostsList = () => {
                     </p>
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => togglePublish(post.id, post.status)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" title="ফিচার্ড" onClick={() => toggleFeatured(post.id, post.is_featured || false)}>
+                      {post.is_featured ? <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" /> : <StarOff className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" title="সম্পাদনা" onClick={() => handleEdit(post)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" title="প্রকাশ/ড্রাফট" onClick={() => togglePublish(post.id, post.status)}>
                       <Eye className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(post.id)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title="মুছুন" onClick={() => handleDelete(post.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
