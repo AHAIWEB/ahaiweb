@@ -556,6 +556,7 @@ const MainContent = () => {
           <div className="space-y-3">
             {/* Featured first post */}
             {filteredPosts[0] && (
+              <Link to={`/post/${filteredPosts[0].slug}`} className="block">
               <Card className="news-card overflow-hidden">
                 <div className="relative group cursor-pointer">
                   {filteredPosts[0].featured_image && (
@@ -581,6 +582,7 @@ const MainContent = () => {
                   </div>
                 </div>
               </Card>
+              </Link>
             )}
 
             {/* Remaining posts list */}
