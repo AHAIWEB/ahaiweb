@@ -76,10 +76,12 @@ const MainContent = () => {
   const autoplayPlugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: false }));
   const autoplayPlugin2 = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
   const autoplayPlugin3 = useRef(Autoplay({ delay: 3500, stopOnInteraction: false }));
+  const autoplayPlugin4 = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
   const [travelRef, travelApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin.current]);
   const [familyRef, familyApi] = useEmblaCarousel({ loop: true, align: "center", containScroll: false }, [autoplayPlugin2.current]);
   const [videoRef, videoApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin3.current]);
+  const [cameraRef, cameraApi] = useEmblaCarousel({ loop: true, align: "start" }, [autoplayPlugin4.current]);
 
   const { data: siteSections } = useQuery({
     queryKey: ["site-sections"],
