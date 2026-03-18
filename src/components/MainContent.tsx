@@ -489,10 +489,6 @@ const MainContent = () => {
             </CardContent>
           </Card>
         );
-              )}
-            </CardContent>
-          </Card>
-        );
 
       default:
         // Handle category sections dynamically
