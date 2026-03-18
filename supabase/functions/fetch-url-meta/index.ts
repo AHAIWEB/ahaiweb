@@ -17,26 +17,40 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Try multiple User-Agents for better compatibility
+    // Validate URL
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid URL format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const userAgents = [
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
       'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-      'facebookexternalhit/1.1',
     ];
 
     let html = '';
     let fetchSuccess = false;
+    let lastError = '';
 
     for (const ua of userAgents) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
         const res = await fetch(url, {
           headers: {
             'User-Agent': ua,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'bn,en;q=0.5',
+            'Accept-Language': 'bn-BD,bn;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'identity',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'no-cache',
           },
           signal: controller.signal,
           redirect: 'follow',
@@ -47,32 +61,42 @@ Deno.serve(async (req) => {
           html = await res.text();
           fetchSuccess = true;
           break;
+        } else {
+          lastError = `HTTP ${res.status}`;
+          // Consume body to avoid resource leak
+          await res.text();
         }
       } catch (e) {
-        console.log(`UA "${ua.substring(0, 30)}..." failed:`, e.message);
+        lastError = e.message || 'Unknown fetch error';
+        console.log(`UA failed: ${lastError}`);
         continue;
       }
     }
 
-    if (!fetchSuccess) {
-      return new Response(JSON.stringify({ error: 'Could not fetch URL with any method' }), {
-        status: 502,
+    if (!fetchSuccess || !html) {
+      // Return partial data from URL itself as fallback
+      const fallbackTitle = parsedUrl.hostname.replace('www.', '');
+      return new Response(JSON.stringify({
+        title: fallbackTitle,
+        description: '',
+        image: '',
+        siteName: fallbackTitle,
+        _fallback: true,
+        _error: lastError,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const getMetaContent = (property: string): string => {
-      // og: tags
       const ogMatch = html.match(new RegExp(`<meta[^>]*property=["']og:${property}["'][^>]*content=["']([^"']*)["']`, 'i'))
         || html.match(new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*property=["']og:${property}["']`, 'i'));
       if (ogMatch) return ogMatch[1];
 
-      // twitter: tags
       const twMatch = html.match(new RegExp(`<meta[^>]*name=["']twitter:${property}["'][^>]*content=["']([^"']*)["']`, 'i'))
         || html.match(new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*name=["']twitter:${property}["']`, 'i'));
       if (twMatch) return twMatch[1];
 
-      // name= tags
       const nameMatch = html.match(new RegExp(`<meta[^>]*name=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i'))
         || html.match(new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*name=["']${property}["']`, 'i'));
       if (nameMatch) return nameMatch[1];
@@ -84,13 +108,11 @@ Deno.serve(async (req) => {
     const title = getMetaContent('title') || (titleMatch ? titleMatch[1].trim() : '');
     const description = getMetaContent('description');
     let image = getMetaContent('image');
-    const siteName = getMetaContent('site_name');
+    const siteName = getMetaContent('site_name') || parsedUrl.hostname.replace('www.', '');
 
-    // Make relative image URLs absolute
     if (image && !image.startsWith('http')) {
       try {
-        const baseUrl = new URL(url);
-        image = new URL(image, baseUrl.origin).href;
+        image = new URL(image, parsedUrl.origin).href;
       } catch {}
     }
 
@@ -99,7 +121,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Fetch error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch URL: ' + (error.message || 'Unknown error') }), {
+    return new Response(JSON.stringify({ error: 'Failed: ' + (error.message || 'Unknown') }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
