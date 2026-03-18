@@ -257,12 +257,12 @@ const MainContent = () => {
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
                   {photoPosts.slice(0, 8).map((p) => (
-                    <div key={p.id} className="min-w-[160px] h-[120px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
-                      <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                        <p className="text-white text-xs font-medium line-clamp-2">{p.title}</p>
+                    <Link key={p.id} to={`/post/${p.slug}`} className="min-w-[220px] h-[180px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
+                      <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                        <p className="text-white text-sm font-medium line-clamp-2">{p.title}</p>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
