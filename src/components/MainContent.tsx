@@ -434,8 +434,73 @@ const MainContent = () => {
           </Card>
         ) : null;
 
+      case "video":
+        return (
+          <Card className="news-card" key="video">
+            <CardHeader className="pb-2">
+              <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
+                <Play className="h-4 w-4" /> ভিডিও
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {videoPosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">কোনো ভিডিও পোস্ট নেই</p>
+              ) : (
+                <div className="space-y-3">
+                  {videoPosts.slice(0, 5).map((post) => (
+                    <Link key={post.id} to={`/post/${post.slug}`} className="group flex gap-3 border-b border-border last:border-0 pb-3 last:pb-0">
+                      {post.featured_image && (
+                        <div className="w-24 h-16 rounded-md bg-muted shrink-0 overflow-hidden relative">
+                          <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="h-5 w-5 text-white fill-white" />
+                          </div>
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h4>
+                        <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+
       default:
-        // Handle ad slots or custom sections
+        // Handle category sections dynamically
+        if (sectionKey.startsWith("cat-")) {
+          const catSlug = sectionKey.replace("cat-", "");
+          const catPosts = getPostsByCategory(catSlug);
+          const sectionInfo = visibleSections.find((s: any) => s.section_key === sectionKey);
+          if (catPosts.length === 0) return null;
+          return (
+            <Card className="news-card" key={sectionKey}>
+              <CardHeader className="pb-2">
+                <CardTitle className="section-title text-base !mb-0">{sectionInfo?.icon} {sectionInfo?.label}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {catPosts.slice(0, 5).map((post) => (
+                  <Link key={post.id} to={`/post/${post.slug}`} className="group flex gap-3 border-b border-border last:border-0 pb-2 last:pb-0">
+                    {post.featured_image && (
+                      <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
+                        <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h4>
+                      {post.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{post.excerpt}</p>}
+                      <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          );
+        }
+        // Handle ad slots
         const section = visibleSections.find((s: any) => s.section_key === sectionKey);
         if (section?.config?.type === "ad" && section?.config?.ad_code) {
           return (
