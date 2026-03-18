@@ -409,8 +409,7 @@ const MainContent = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {urlPosts.slice(0, 5).map((post) => (
-                <a key={post.id} href={post.source_url || "#"} target={post.source_url ? "_blank" : undefined} rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
-                  <Link to={`/post/${post.slug}`} className="block mb-1">
+                <Link key={post.id} to={`/post/${post.slug}`} className="group block border-b border-border last:border-0 pb-3 last:pb-0">
                   <div className="flex gap-3">
                     {post.featured_image && (
                       <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
@@ -428,7 +427,7 @@ const MainContent = () => {
                       <PostBadges post={post} />
                     </div>
                   </div>
-                </a>
+                </Link>
               ))}
             </CardContent>
           </Card>
