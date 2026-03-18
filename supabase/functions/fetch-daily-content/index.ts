@@ -11,10 +11,13 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
 
-    const today = new Date().toISOString().split("T")[0];
-    const todayDate = new Date();
-    const month = todayDate.toLocaleDateString("bn-BD", { month: "long" });
-    const day = todayDate.toLocaleDateString("bn-BD", { day: "numeric" });
+    // Use BDT (UTC+6) for date consistency
+    const nowUtc = new Date();
+    const bdtOffset = 6 * 60 * 60 * 1000;
+    const todayDate = new Date(nowUtc.getTime() + bdtOffset);
+    const today = todayDate.toISOString().split("T")[0];
+    const month = todayDate.toLocaleDateString("bn-BD", { month: "long", timeZone: "Asia/Dhaka" });
+    const day = todayDate.toLocaleDateString("bn-BD", { day: "numeric", timeZone: "Asia/Dhaka" });
 
     // Check existing content
     const existingRes = await fetch(`${supabaseUrl}/rest/v1/daily_content?date=eq.${today}&select=content_type`, {
