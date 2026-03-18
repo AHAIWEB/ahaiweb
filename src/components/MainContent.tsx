@@ -360,7 +360,7 @@ const MainContent = () => {
                             <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
                           </div>
                         )}
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
