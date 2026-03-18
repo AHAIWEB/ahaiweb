@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { Clock, Heart, Newspaper, Globe, Radio, Loader2, ExternalLink, RefreshCw, Plane, Users, ChevronLeft, ChevronRight, ArrowLeft, Play } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
