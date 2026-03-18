@@ -145,6 +145,13 @@ const QuickPost = () => {
 
       <Card>
         <CardContent className="p-5 space-y-4">
+          <div className="flex gap-2">
+            <Input placeholder="URL থেকে কন্টেন্ট আনুন (ঐচ্ছিক)" type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} className="flex-1" />
+            <Button type="button" variant="secondary" size="sm" disabled={fetching || !sourceUrl.startsWith("http")} onClick={fetchFromUrl}>
+              {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Link2 className="h-4 w-4 mr-1" /> ফেচ</>}
+            </Button>
+          </div>
+
           <Input placeholder="শিরোনাম" value={title} onChange={(e) => setTitle(e.target.value)} />
 
           <PostTagLocationPicker
