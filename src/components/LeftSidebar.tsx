@@ -21,7 +21,9 @@ const fallbackQuotes = [
 
 const LeftSidebar = () => {
   const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  // Use BDT timezone to match server
+  const bdtDate = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }));
+  const todayStr = `${bdtDate.getFullYear()}-${String(bdtDate.getMonth() + 1).padStart(2, '0')}-${String(bdtDate.getDate()).padStart(2, '0')}`;
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
 
   const todayBn = today.toLocaleDateString('bn-BD', {
