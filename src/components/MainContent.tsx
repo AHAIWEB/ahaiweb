@@ -330,9 +330,9 @@ const MainContent = () => {
                             {formatDate(writingPosts[0].created_at)}
                           </span>
                         </div>
-                        <h3 className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors`}>
+                        <Link to={`/post/${writingPosts[0].slug}`} className={`text-base font-bold leading-snug ${writingPosts[0].featured_image ? 'text-white' : 'text-foreground group-hover:text-primary'} transition-colors hover:underline`}>
                           {writingPosts[0].title}
-                        </h3>
+                        </Link>
                         {writingPosts[0].excerpt && (
                           <p className={`text-xs mt-1.5 line-clamp-2 ${writingPosts[0].featured_image ? 'text-white/70' : 'text-muted-foreground'}`}>
                             {writingPosts[0].excerpt}
