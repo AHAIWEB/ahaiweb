@@ -443,34 +443,52 @@ const MainContent = () => {
 
       case "video":
         return (
-          <Card className="news-card" key="video">
-            <CardHeader className="pb-2">
+          <Card className="news-card overflow-hidden" key="video">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="section-title text-base !mb-0 flex items-center gap-1.5">
                 <Play className="h-4 w-4" /> ভিডিও
               </CardTitle>
+              {videoPosts.length > 0 && <SlideControls emblaApi={videoApi} />}
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-0 pb-3">
               {videoPosts.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">কোনো ভিডিও পোস্ট নেই</p>
+                <p className="text-sm text-muted-foreground text-center py-4 px-4">কোনো ভিডিও পোস্ট নেই</p>
               ) : (
-                <div className="space-y-3">
-                  {videoPosts.slice(0, 5).map((post) => (
-                    <Link key={post.id} to={`/post/${post.slug}`} className="group flex gap-3 border-b border-border last:border-0 pb-3 last:pb-0">
-                      {post.featured_image && (
-                        <div className="w-24 h-16 rounded-md bg-muted shrink-0 overflow-hidden relative">
-                          <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                            <Play className="h-5 w-5 text-white fill-white" />
-                          </div>
+                <>
+                  <div className="overflow-hidden" ref={videoRef}>
+                    <div className="flex">
+                      {videoPosts.slice(0, 8).map((post) => (
+                        <div key={post.id} className="flex-[0_0_80%] sm:flex-[0_0_45%] min-w-0 pl-4 first:pl-4">
+                          <Link to={`/post/${post.slug}`} className="group block">
+                            <div className="relative rounded-xl overflow-hidden aspect-video bg-muted">
+                              {post.featured_image ? (
+                                <img src={post.featured_image} alt={post.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                                  <Play className="h-4 w-4 text-primary fill-primary ml-0.5" />
+                                </div>
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <h4 className="text-white text-sm font-bold line-clamp-2 drop-shadow-lg">{post.title}</h4>
+                                <span className="text-[10px] text-white/60 mt-1 block">{formatDate(post.created_at)}</span>
+                              </div>
+                            </div>
+                          </Link>
                         </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h4>
-                        <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                      ))}
+                    </div>
+                  </div>
+                  <SlideDots emblaApi={videoApi} count={Math.min(videoPosts.length, 8)} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        );
               )}
             </CardContent>
           </Card>
