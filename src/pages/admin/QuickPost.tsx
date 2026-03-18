@@ -221,10 +221,11 @@ const QuickPost = () => {
 
           <div className="flex gap-3 pt-2">
             <Button onClick={() => handleSubmit("draft")} variant="secondary" disabled={loading || !title.trim()}>
-              ড্রাফট সেভ
+              {editId ? "ড্রাফটে আপডেট" : "ড্রাফট সেভ"}
             </Button>
             <Button onClick={() => handleSubmit("published")} disabled={loading || !title.trim()}>
-              প্রকাশ করুন
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {editId ? "আপডেট ও প্রকাশ" : "প্রকাশ করুন"}
             </Button>
           </div>
         </CardContent>
