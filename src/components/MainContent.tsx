@@ -138,12 +138,12 @@ const MainContent = () => {
   const familyPosts = getPostsByCategory("ফ্যামিলি");
 
   const travelData = travelPosts.length > 0
-    ? travelPosts.slice(0, 6).map((p) => ({ id: p.id, title: p.title, img: p.featured_image || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" }))
+    ? travelPosts.slice(0, 6).map((p) => ({ id: p.id, title: p.title, slug: p.slug, img: p.featured_image || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" }))
     : [
-      { id: "d1", title: "কক্সবাজার সমুদ্র সৈকত", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" },
-      { id: "d2", title: "সুন্দরবন ম্যানগ্রোভ", img: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=600&h=400&fit=crop" },
-      { id: "d3", title: "সাজেক ভ্যালি", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" },
-      { id: "d4", title: "রাতারগুল জলাবন", img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=400&fit=crop" },
+      { id: "d1", title: "কক্সবাজার সমুদ্র সৈকত", slug: "", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" },
+      { id: "d2", title: "সুন্দরবন ম্যানগ্রোভ", slug: "", img: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=600&h=400&fit=crop" },
+      { id: "d3", title: "সাজেক ভ্যালি", slug: "", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" },
+      { id: "d4", title: "রাতারগুল জলাবন", slug: "", img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=400&fit=crop" },
     ];
 
   const familyData = familyPosts.length > 0
@@ -257,12 +257,12 @@ const MainContent = () => {
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
                   {photoPosts.slice(0, 8).map((p) => (
-                    <div key={p.id} className="min-w-[160px] h-[120px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
-                      <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                        <p className="text-white text-xs font-medium line-clamp-2">{p.title}</p>
+                    <Link key={p.id} to={`/post/${p.slug}`} className="min-w-[220px] h-[180px] rounded-lg bg-muted overflow-hidden shrink-0 relative group cursor-pointer snap-start">
+                      <img src={p.featured_image!} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                        <p className="text-white text-sm font-medium line-clamp-2">{p.title}</p>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -284,17 +284,31 @@ const MainContent = () => {
                 <div className="flex">
                   {travelData.map((item) => (
                     <div key={item.id} className="flex-[0_0_85%] min-w-0 pl-4 first:pl-4">
-                      <div className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer">
-                        <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <p className="text-white text-sm font-bold drop-shadow-lg">{item.title}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Plane className="h-3 w-3 text-white/70" />
-                            <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
+                      {item.slug ? (
+                        <Link to={`/post/${item.slug}`} className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer block">
+                          <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <p className="text-white text-sm font-bold drop-shadow-lg group-hover:underline">{item.title}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Plane className="h-3 w-3 text-white/70" />
+                              <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
+                            </div>
+                          </div>
+                        </Link>
+                      ) : (
+                        <div className="relative rounded-xl overflow-hidden aspect-[16/9] group cursor-pointer">
+                          <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <p className="text-white text-sm font-bold drop-shadow-lg">{item.title}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Plane className="h-3 w-3 text-white/70" />
+                              <span className="text-[10px] text-white/70">ভ্রমণ গাইড</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>

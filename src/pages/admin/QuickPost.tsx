@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Loader2, Link2 } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 import MultiImageUploader, { ImageItem } from "@/components/MultiImageUploader";
 
@@ -26,6 +27,29 @@ const QuickPost = () => {
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [fetching, setFetching] = useState(false);
+
+  const fetchFromUrl = async () => {
+    if (!sourceUrl.startsWith("http")) return;
+    setFetching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-url-meta", { body: { url: sourceUrl } });
+      if (!error && data) {
+        if (data.title && !title) setTitle(data.title);
+        if (data.content && !content) setContent(data.content);
+        else if (data.description && !content) setContent(data.description);
+        if (data.image) {
+          setImages(prev => prev.length === 0 ? [{ id: Date.now().toString(), type: "url" as const, url: data.image, caption: "", preview: data.image }] : prev);
+        }
+        toast({ title: "ফেচ সফল!", description: "URL থেকে কন্টেন্ট আনা হয়েছে" });
+      }
+    } catch {
+      toast({ title: "ফেচ ব্যর্থ", variant: "destructive" });
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handleSubmit = async (status: "draft" | "published") => {
     if (!title.trim() || !user) return;
@@ -121,6 +145,13 @@ const QuickPost = () => {
 
       <Card>
         <CardContent className="p-5 space-y-4">
+          <div className="flex gap-2">
+            <Input placeholder="URL থেকে কন্টেন্ট আনুন (ঐচ্ছিক)" type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} className="flex-1" />
+            <Button type="button" variant="secondary" size="sm" disabled={fetching || !sourceUrl.startsWith("http")} onClick={fetchFromUrl}>
+              {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Link2 className="h-4 w-4 mr-1" /> ফেচ</>}
+            </Button>
+          </div>
+
           <Input placeholder="শিরোনাম" value={title} onChange={(e) => setTitle(e.target.value)} />
 
           <PostTagLocationPicker
