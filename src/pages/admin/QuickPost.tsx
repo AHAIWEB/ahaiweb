@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, Link2 } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 import MultiImageUploader, { ImageItem } from "@/components/MultiImageUploader";
@@ -17,6 +17,8 @@ const QuickPost = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -29,6 +31,25 @@ const QuickPost = () => {
   const [selectedUpazila, setSelectedUpazila] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [fetching, setFetching] = useState(false);
+
+  // Load post data for editing
+  useEffect(() => {
+    if (!editId) return;
+    const loadPost = async () => {
+      const { data: post } = await supabase.from("posts").select("*").eq("id", editId).single();
+      if (post) {
+        setTitle(post.title);
+        setContent(post.content || "");
+        setSourceUrl(post.source_url || "");
+        if (post.category_id) setSelectedCategories([post.category_id]);
+      }
+      const { data: tags } = await supabase.from("post_tags").select("tag_id").eq("post_id", editId);
+      if (tags) setSelectedTags(tags.map((t) => t.tag_id));
+      const { data: media } = await supabase.from("media").select("*").eq("post_id", editId).order("sort_order");
+      if (media) setImages(media.map((m) => ({ id: m.id, type: "url" as const, url: m.file_url, caption: m.caption || "", preview: m.file_url })));
+    };
+    loadPost();
+  }, [editId]);
 
   const fetchFromUrl = async () => {
     if (!sourceUrl.startsWith("http")) return;
