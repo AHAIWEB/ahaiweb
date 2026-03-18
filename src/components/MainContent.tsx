@@ -181,7 +181,7 @@ const MainContent = () => {
   );
 
   const rssCategories = ["দেশীয়", "আন্তর্জাতিক", "গ্রামের খবর"];
-  const getRssByCategory = (cat: string) => rssItems.filter((item) => item.category === cat).slice(0, 5);
+  const getRssByCategory = (cat: string) => rssItems.filter((item) => item.category === cat).slice(0, 8);
 
   const visibleSections = siteSections?.filter((s: any) => s.is_visible && (s.zone === 'main' || !s.zone)) || [];
 
@@ -213,32 +213,59 @@ const MainContent = () => {
                     <TabsTrigger value="আন্তর্জাতিক" className="text-xs gap-1"><Globe className="h-3 w-3" /> আন্তর্জাতিক</TabsTrigger>
                     <TabsTrigger value="গ্রামের খবর" className="text-xs gap-1"><Radio className="h-3 w-3" /> গ্রামের খবর</TabsTrigger>
                   </TabsList>
-                  {rssCategories.map((category) => (
-                    <TabsContent key={category} value={category} className="mt-3 space-y-3">
-                      {getRssByCategory(category).length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">এই ক্যাটেগরিতে কোনো সংবাদ নেই</p>
-                      ) : getRssByCategory(category).map((item, i) => (
-                        <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="group block border-b border-border last:border-0 pb-3 last:pb-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <h4 className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">{item.title}</h4>
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                  {rssCategories.map((category) => {
+                    const catItems = getRssByCategory(category);
+                    if (catItems.length === 0) {
+                      return (
+                        <TabsContent key={category} value={category} className="mt-3">
+                          <p className="text-sm text-muted-foreground text-center py-4">এই ক্যাটেগরিতে কোনো সংবাদ নেই</p>
+                        </TabsContent>
+                      );
+                    }
+                    const leadItem = catItems[0];
+                    const restItems = catItems.slice(1);
+                    return (
+                      <TabsContent key={category} value={category} className="mt-3 space-y-0">
+                        {/* Lead Story - Jugantor style */}
+                        <a href={leadItem.link} target="_blank" rel="noopener noreferrer" className="group block mb-3">
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-extrabold leading-snug group-hover:text-primary transition-colors">{leadItem.title}</h3>
+                              <p className="text-xs text-muted-foreground mt-2 line-clamp-3 leading-relaxed">{leadItem.description}</p>
                               <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="outline" className="text-[10px] h-5">{item.source}</Badge>
-                                <span className="text-xs text-muted-foreground">{formatDate(item.pubDate)}</span>
-                                <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
+                                <Badge variant="outline" className="text-[10px] h-5">{leadItem.source}</Badge>
+                                <span className="text-[10px] text-muted-foreground">{formatDate(leadItem.pubDate)}</span>
                               </div>
                             </div>
-                            {item.image && (
-                              <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                            {leadItem.image && (
+                              <div className="w-full sm:w-48 h-32 sm:h-36 rounded-lg bg-muted shrink-0 overflow-hidden">
+                                <img src={leadItem.image} alt={leadItem.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.currentTarget.style.display = "none")} />
                               </div>
                             )}
                           </div>
                         </a>
-                      ))}
-                    </TabsContent>
-                  ))}
+
+                        {/* Separator */}
+                        <div className="border-t border-border my-2" />
+
+                        {/* Rest - 3-column grid with thumbnails */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {restItems.map((item, i) => (
+                            <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="group flex gap-2.5 items-start">
+                              {item.image && (
+                                <div className="w-20 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
+                                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-xs font-bold group-hover:text-primary transition-colors leading-tight line-clamp-3">{item.title}</h4>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </TabsContent>
+                    );
+                  })}
                 </Tabs>
               )}
             </CardContent>
