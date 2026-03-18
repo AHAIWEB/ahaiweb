@@ -46,6 +46,7 @@ const App = () => (
               <Route path="rss-feeds" element={<RssFeedManager />} />
               <Route path="site-customizer" element={<SiteCustomizer />} />
             </Route>
+            <Route path="/post/:slug" element={<PostDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
