@@ -27,6 +27,29 @@ const QuickPost = () => {
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [fetching, setFetching] = useState(false);
+
+  const fetchFromUrl = async () => {
+    if (!sourceUrl.startsWith("http")) return;
+    setFetching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-url-meta", { body: { url: sourceUrl } });
+      if (!error && data) {
+        if (data.title && !title) setTitle(data.title);
+        if (data.content && !content) setContent(data.content);
+        else if (data.description && !content) setContent(data.description);
+        if (data.image) {
+          setImages(prev => prev.length === 0 ? [{ id: Date.now().toString(), type: "url", url: data.image, caption: "" }] : prev);
+        }
+        toast({ title: "ফেচ সফল!", description: "URL থেকে কন্টেন্ট আনা হয়েছে" });
+      }
+    } catch {
+      toast({ title: "ফেচ ব্যর্থ", variant: "destructive" });
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handleSubmit = async (status: "draft" | "published") => {
     if (!title.trim() || !user) return;
