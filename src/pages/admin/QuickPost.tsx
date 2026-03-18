@@ -40,7 +40,7 @@ const QuickPost = () => {
         if (data.content && !content) setContent(data.content);
         else if (data.description && !content) setContent(data.description);
         if (data.image) {
-          setImages(prev => prev.length === 0 ? [{ id: Date.now().toString(), type: "url", url: data.image, caption: "" }] : prev);
+          setImages(prev => prev.length === 0 ? [{ id: Date.now().toString(), type: "url" as const, url: data.image, caption: "", preview: data.image }] : prev);
         }
         toast({ title: "ফেচ সফল!", description: "URL থেকে কন্টেন্ট আনা হয়েছে" });
       }
