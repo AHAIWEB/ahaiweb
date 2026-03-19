@@ -156,7 +156,7 @@ const UrlPost = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <h2 className="text-2xl font-bold flex items-center gap-2">
-        <Link2 className="h-6 w-6" /> URL কুইক পোস্ট
+        <Link2 className="h-6 w-6" /> {editId ? "URL পোস্ট এডিট" : "URL কুইক পোস্ট"}
       </h2>
 
       <Card>
