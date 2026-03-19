@@ -106,7 +106,7 @@ const MainContent = () => {
         .from("posts")
         .select("*, categories(name, icon, color), post_locations(divisions(bn_name)), post_categories(categories(name, icon, color))")
         .eq("status", "published")
-        .order("created_at", { ascending: false })
+        .order("published_at", { ascending: false })
         .limit(50);
       return (data as any as Post[]) || [];
     },
