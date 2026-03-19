@@ -1,14 +1,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Globe, Calendar, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
+import { MapPin, Globe, Calendar, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Music, Camera, PinIcon, BookOpen, Link2 } from "lucide-react";
 
 const socialLinks = [
-  { icon: Facebook, url: "https://facebook.com/ahaiweb", label: "Facebook" },
-  { icon: Twitter, url: "https://twitter.com/ahaiweb", label: "Twitter" },
-  { icon: Instagram, url: "https://instagram.com/ahaiweb", label: "Instagram" },
-  { icon: Youtube, url: "https://youtube.com/@ahaiweb", label: "YouTube" },
-  { icon: Linkedin, url: "https://linkedin.com/in/ahaiweb", label: "LinkedIn" },
-  { icon: Github, url: "https://github.com/ahaiweb", label: "GitHub" },
+  { icon: Facebook, url: "https://www.facebook.com/AHAiWEB", label: "Facebook Profile" },
+  { icon: Facebook, url: "https://www.facebook.com/ahaiweb01", label: "Facebook Page" },
+  { icon: Instagram, url: "https://www.instagram.com/ahaiweb01/", label: "Instagram" },
+  { icon: Link2, url: "https://www.threads.com/@ahaiweb01", label: "Threads" },
+  { icon: Linkedin, url: "https://www.linkedin.com/in/ahaiweb", label: "LinkedIn" },
+  { icon: Youtube, url: "https://www.youtube.com/@AHAiWEBS", label: "YouTube" },
+  { icon: Github, url: "https://github.com/AHAIWEB", label: "GitHub" },
+  { icon: Camera, url: "https://unsplash.com/@ahaiweb", label: "Unsplash" },
+  { icon: PinIcon, url: "https://www.pinterest.com/ahaiweb", label: "Pinterest" },
+  { icon: BookOpen, url: "https://www.tumblr.com/ahaiweb", label: "Tumblr" },
+  { icon: Music, url: "https://soundcloud.com/ahaiweb", label: "SoundCloud" },
+  { icon: Music, url: "https://open.spotify.com/user/31vlzdnxayney7u6iifjo5izyvga", label: "Spotify" },
+  { icon: Globe, url: "https://www.slideshare.net/AbdulHaiRahat", label: "SlideShare" },
+  { icon: BookOpen, url: "https://www.bangla-kobita.com/abdulhairahat/poem20121125024311/", label: "বাংলা কবিতা" },
+  { icon: Link2, url: "https://instabio.cc/AHAIWEB", label: "InstaBio" },
 ];
 
 const ProfileCard = () => {
@@ -47,7 +56,7 @@ const ProfileCard = () => {
         </div>
 
         {/* Social Media Links */}
-        <div className="mt-4 flex justify-center gap-2 flex-wrap">
+        <div className="mt-4 flex justify-center gap-1.5 flex-wrap">
           {socialLinks.map((social) => (
             <a
               key={social.label}
@@ -55,9 +64,9 @@ const ProfileCard = () => {
               target="_blank"
               rel="noopener noreferrer"
               title={social.label}
-              className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors text-muted-foreground"
+              className="p-1.5 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors text-muted-foreground"
             >
-              <social.icon className="h-4 w-4" />
+              <social.icon className="h-3.5 w-3.5" />
             </a>
           ))}
         </div>
