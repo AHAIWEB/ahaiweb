@@ -17,7 +17,7 @@ interface RssItem {
 interface Post {
   id: string; title: string; excerpt: string | null; featured_image: string | null; created_at: string;
   likes: number | null; post_type: string; slug: string; category_id: string | null;
-  source_url: string | null; source_name: string | null;
+  source_url: string | null; source_name: string | null; is_featured: boolean | null;
   categories?: { name: string; icon: string | null; color: string | null } | null;
   post_locations?: { divisions?: { bn_name: string } | null }[];
   post_categories?: { categories: { name: string; icon: string | null; color: string | null } }[];
