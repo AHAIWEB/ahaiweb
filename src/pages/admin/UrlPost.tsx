@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 
@@ -15,6 +15,9 @@ const UrlPost = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -28,6 +31,31 @@ const UrlPost = () => {
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
+
+  // Load post data for editing
+  useEffect(() => {
+    if (!editId) return;
+    const loadPost = async () => {
+      const { data: post } = await supabase.from("posts").select("*").eq("id", editId).single();
+      if (post) {
+        setTitle(post.title);
+        setContent(post.content || "");
+        setSourceUrl(post.source_url || "");
+        setSourceName(post.source_name || "");
+        setImageUrl(post.featured_image || "");
+        if (post.category_id) setSelectedCategories([post.category_id]);
+      }
+      const { data: tags } = await supabase.from("post_tags").select("tag_id").eq("post_id", editId);
+      if (tags) setSelectedTags(tags.map((t) => t.tag_id));
+      const { data: loc } = await supabase.from("post_locations").select("*").eq("post_id", editId).single();
+      if (loc) {
+        setSelectedDivision(loc.division_id || "");
+        setSelectedDistrict(loc.district_id || "");
+        setSelectedUpazila(loc.upazila_id || "");
+      }
+    };
+    loadPost();
+  }, [editId]);
 
   const fetchMeta = async (url: string) => {
     if (!url.startsWith("http")) return;
@@ -55,48 +83,67 @@ const UrlPost = () => {
     setLoading(true);
 
     try {
-      const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
+      let postId = editId;
 
-      const { data: post, error: postError } = await supabase.from("posts").insert({
-        user_id: user.id,
-        title: title.trim(),
-        slug,
-        content: content.trim(),
-        excerpt: content.trim().substring(0, 150),
-        featured_image: imageUrl || null,
-        source_url: sourceUrl.trim(),
-        source_name: sourceName.trim() || null,
-        category_id: selectedCategories[0] || null,
-        post_type: "url" as const,
-        status,
-        published_at: status === "published" ? new Date().toISOString() : null,
-      }).select().single();
+      if (editId) {
+        const { error } = await supabase.from("posts").update({
+          title: title.trim(),
+          content: content.trim(),
+          excerpt: content.trim().substring(0, 150),
+          featured_image: imageUrl || null,
+          source_url: sourceUrl.trim(),
+          source_name: sourceName.trim() || null,
+          category_id: selectedCategories[0] || null,
+          status,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        }).eq("id", editId);
+        if (error) throw error;
 
-      if (postError) throw postError;
+        await supabase.from("post_tags").delete().eq("post_id", editId);
+        await supabase.from("post_categories").delete().eq("post_id", editId);
+        await supabase.from("post_locations").delete().eq("post_id", editId);
+      } else {
+        const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
+        const { data: post, error: postError } = await supabase.from("posts").insert({
+          user_id: user.id,
+          title: title.trim(),
+          slug,
+          content: content.trim(),
+          excerpt: content.trim().substring(0, 150),
+          featured_image: imageUrl || null,
+          source_url: sourceUrl.trim(),
+          source_name: sourceName.trim() || null,
+          category_id: selectedCategories[0] || null,
+          post_type: "url" as const,
+          status,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        }).select().single();
+        if (postError) throw postError;
+        postId = post.id;
+      }
 
-      // Save multiple categories
-      if (selectedCategories.length > 0) {
+      if (selectedCategories.length > 0 && postId) {
         await supabase.from("post_categories").insert(
-          selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
+          selectedCategories.map((catId) => ({ post_id: postId!, category_id: catId }))
         );
       }
 
-      if (selectedTags.length > 0) {
+      if (selectedTags.length > 0 && postId) {
         await supabase.from("post_tags").insert(
-          selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
+          selectedTags.map((tagId) => ({ post_id: postId!, tag_id: tagId }))
         );
       }
 
-      if (selectedDivision) {
+      if (selectedDivision && postId) {
         await supabase.from("post_locations").insert({
-          post_id: post.id,
+          post_id: postId,
           division_id: selectedDivision || null,
           district_id: selectedDistrict || null,
           upazila_id: selectedUpazila || null,
         });
       }
 
-      toast({ title: "সফল!", description: "URL পোস্ট তৈরি হয়েছে" });
+      toast({ title: "সফল!", description: editId ? "পোস্ট আপডেট হয়েছে" : "URL পোস্ট তৈরি হয়েছে" });
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
       navigate("/admin/posts");
     } catch (err: any) {
@@ -109,7 +156,7 @@ const UrlPost = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <h2 className="text-2xl font-bold flex items-center gap-2">
-        <Link2 className="h-6 w-6" /> URL কুইক পোস্ট
+        <Link2 className="h-6 w-6" /> {editId ? "URL পোস্ট এডিট" : "URL কুইক পোস্ট"}
       </h2>
 
       <Card>

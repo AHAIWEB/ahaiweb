@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ImagePlus, X, Bold, Italic, Heading1, Heading2, List, Quote } from "lucide-react";
 import PostTagLocationPicker from "@/components/PostTagLocationPicker";
 import MultiImageUploader, { ImageItem } from "@/components/MultiImageUploader";
@@ -17,6 +17,9 @@ const EditorPost = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -30,6 +33,32 @@ const EditorPost = () => {
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
+
+  // Load post data for editing
+  useEffect(() => {
+    if (!editId) return;
+    const loadPost = async () => {
+      const { data: post } = await supabase.from("posts").select("*").eq("id", editId).single();
+      if (post) {
+        setTitle(post.title);
+        setContent(post.content || "");
+        setExcerpt(post.excerpt || "");
+        if (post.featured_image) setFeaturedPreview(post.featured_image);
+        if (post.category_id) setSelectedCategories([post.category_id]);
+      }
+      const { data: tags } = await supabase.from("post_tags").select("tag_id").eq("post_id", editId);
+      if (tags) setSelectedTags(tags.map((t) => t.tag_id));
+      const { data: media } = await supabase.from("media").select("*").eq("post_id", editId).order("sort_order");
+      if (media) setImages(media.map((m) => ({ id: m.id, type: "url" as const, url: m.file_url, caption: m.caption || "", preview: m.file_url })));
+      const { data: loc } = await supabase.from("post_locations").select("*").eq("post_id", editId).single();
+      if (loc) {
+        setSelectedDivision(loc.division_id || "");
+        setSelectedDistrict(loc.district_id || "");
+        setSelectedUpazila(loc.upazila_id || "");
+      }
+    };
+    loadPost();
+  }, [editId]);
 
   const handleFeaturedImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,8 +79,7 @@ const EditorPost = () => {
     setLoading(true);
 
     try {
-      const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
-      let featuredImageUrl = "";
+      let featuredImageUrl = featuredPreview || "";
 
       if (featuredImage) {
         const filePath = `${user.id}/featured/${Date.now()}-${featuredImage.name}`;
@@ -62,9 +90,27 @@ const EditorPost = () => {
         }
       }
 
-      const { data: post, error: postError } = await supabase
-        .from("posts")
-        .insert({
+      let postId = editId;
+
+      if (editId) {
+        const { error } = await supabase.from("posts").update({
+          title: title.trim(),
+          content: content.trim(),
+          excerpt: excerpt.trim() || content.trim().substring(0, 150),
+          featured_image: featuredImageUrl || null,
+          category_id: selectedCategories[0] || null,
+          status,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        }).eq("id", editId);
+        if (error) throw error;
+
+        await supabase.from("post_tags").delete().eq("post_id", editId);
+        await supabase.from("post_categories").delete().eq("post_id", editId);
+        await supabase.from("post_locations").delete().eq("post_id", editId);
+        await supabase.from("media").delete().eq("post_id", editId);
+      } else {
+        const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
+        const { data: post, error: postError } = await supabase.from("posts").insert({
           user_id: user.id,
           title: title.trim(),
           slug,
@@ -75,27 +121,26 @@ const EditorPost = () => {
           post_type: "editor" as const,
           status,
           published_at: status === "published" ? new Date().toISOString() : null,
-        })
-        .select()
-        .single();
+        }).select().single();
+        if (postError) throw postError;
+        postId = post.id;
+      }
 
-      if (postError) throw postError;
-
-      if (selectedCategories.length > 0) {
+      if (selectedCategories.length > 0 && postId) {
         await supabase.from("post_categories").insert(
-          selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
+          selectedCategories.map((catId) => ({ post_id: postId!, category_id: catId }))
         );
       }
 
-      if (selectedTags.length > 0) {
+      if (selectedTags.length > 0 && postId) {
         await supabase.from("post_tags").insert(
-          selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
+          selectedTags.map((tagId) => ({ post_id: postId!, tag_id: tagId }))
         );
       }
 
-      if (selectedDivision) {
+      if (selectedDivision && postId) {
         await supabase.from("post_locations").insert({
-          post_id: post.id,
+          post_id: postId,
           division_id: selectedDivision || null,
           district_id: selectedDistrict || null,
           upazila_id: selectedUpazila || null,
@@ -108,7 +153,7 @@ const EditorPost = () => {
         let fileUrl = "";
 
         if (img.type === "file" && img.file) {
-          const filePath = `${user.id}/${post.id}/${Date.now()}-${img.file.name}`;
+          const filePath = `${user.id}/${postId}/${Date.now()}-${img.file.name}`;
           const { error: uploadError } = await supabase.storage.from("media").upload(filePath, img.file);
           if (!uploadError) {
             const { data: urlData } = supabase.storage.from("media").getPublicUrl(filePath);
@@ -118,10 +163,10 @@ const EditorPost = () => {
           fileUrl = img.url;
         }
 
-        if (fileUrl) {
+        if (fileUrl && postId) {
           await supabase.from("media").insert({
             user_id: user.id,
-            post_id: post.id,
+            post_id: postId,
             file_url: fileUrl,
             file_name: img.file?.name || "url-image",
             caption: img.caption || null,
@@ -130,7 +175,7 @@ const EditorPost = () => {
         }
       }
 
-      toast({ title: "সফল!", description: status === "published" ? "পোস্ট প্রকাশিত!" : "ড্রাফট সেভ!" });
+      toast({ title: "সফল!", description: editId ? "পোস্ট আপডেট হয়েছে!" : (status === "published" ? "পোস্ট প্রকাশিত!" : "ড্রাফট সেভ!") });
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
       navigate("/admin/posts");
     } catch (err: any) {
@@ -142,7 +187,7 @@ const EditorPost = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      <h2 className="text-2xl font-bold">এডিটর পোস্ট</h2>
+      <h2 className="text-2xl font-bold">{editId ? "এডিটর পোস্ট এডিট" : "এডিটর পোস্ট"}</h2>
 
       <Card>
         <CardContent className="p-5 space-y-4">
