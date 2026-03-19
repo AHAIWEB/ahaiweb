@@ -16,6 +16,9 @@ const UrlPost = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceName, setSourceName] = useState("");
@@ -28,6 +31,31 @@ const UrlPost = () => {
   const [selectedDivision, setSelectedDivision] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedUpazila, setSelectedUpazila] = useState("");
+
+  // Load post data for editing
+  useEffect(() => {
+    if (!editId) return;
+    const loadPost = async () => {
+      const { data: post } = await supabase.from("posts").select("*").eq("id", editId).single();
+      if (post) {
+        setTitle(post.title);
+        setContent(post.content || "");
+        setSourceUrl(post.source_url || "");
+        setSourceName(post.source_name || "");
+        setImageUrl(post.featured_image || "");
+        if (post.category_id) setSelectedCategories([post.category_id]);
+      }
+      const { data: tags } = await supabase.from("post_tags").select("tag_id").eq("post_id", editId);
+      if (tags) setSelectedTags(tags.map((t) => t.tag_id));
+      const { data: loc } = await supabase.from("post_locations").select("*").eq("post_id", editId).single();
+      if (loc) {
+        setSelectedDivision(loc.division_id || "");
+        setSelectedDistrict(loc.district_id || "");
+        setSelectedUpazila(loc.upazila_id || "");
+      }
+    };
+    loadPost();
+  }, [editId]);
 
   const fetchMeta = async (url: string) => {
     if (!url.startsWith("http")) return;
