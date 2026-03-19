@@ -690,13 +690,72 @@ const MainContent = () => {
   }
 
   // If site_sections loaded, render in order; otherwise fallback
+  const featuredPosts = posts?.filter((p) => p.is_featured) || [];
+
   const orderedKeys = visibleSections.length > 0
     ? visibleSections.map((s: any) => s.section_key)
-    : ["news", "camera", "travel", "writing", "family", "url-posts"];
+    : ["featured_hero", "news", "camera", "travel", "writing", "family", "url-posts"];
 
   return (
     <div className="space-y-6">
-      {orderedKeys.map((key: string) => renderSection(key))}
+      {orderedKeys.map((key: string) => {
+        if (key === "featured_hero") {
+          if (featuredPosts.length === 0) return null;
+          return (
+            <Card className="news-card overflow-hidden" key="featured_hero">
+              <CardContent className="p-0">
+                {/* Hero featured post */}
+                {featuredPosts[0] && (
+                  <Link to={`/post/${featuredPosts[0].slug}`} className="group block relative">
+                    <div className="aspect-[16/9] sm:aspect-[21/9] overflow-hidden">
+                      {featuredPosts[0].featured_image ? (
+                        <img src={featuredPosts[0].featured_image} alt={featuredPosts[0].title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+                      <Badge className="bg-yellow-500/90 text-white border-0 text-xs mb-2">⭐ ফিচার্ড</Badge>
+                      <h2 className="text-lg sm:text-2xl font-extrabold text-white leading-snug drop-shadow-lg line-clamp-2">
+                        {featuredPosts[0].title}
+                      </h2>
+                      {featuredPosts[0].excerpt && (
+                        <p className="text-white/70 text-xs sm:text-sm mt-1.5 line-clamp-2">{featuredPosts[0].excerpt}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-2 text-white/50 text-xs">
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDate(featuredPosts[0].created_at)}</span>
+                        <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {featuredPosts[0].likes || 0}</span>
+                      </div>
+                    </div>
+                  </Link>
+                )}
+                {/* Additional featured posts */}
+                {featuredPosts.length > 1 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 border-t border-border">
+                    {featuredPosts.slice(1, 4).map((post) => (
+                      <Link key={post.id} to={`/post/${post.slug}`}
+                        className="group flex gap-2.5 p-3 border-r border-border last:border-r-0 hover:bg-muted/50 transition-colors">
+                        {post.featured_image && (
+                          <div className="w-14 h-14 rounded-md bg-muted shrink-0 overflow-hidden">
+                            <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-xs font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h4>
+                          <span className="text-[10px] text-muted-foreground mt-1 block">{formatDate(post.created_at)}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        }
+        return renderSection(key);
+      })}
     </div>
   );
 };
