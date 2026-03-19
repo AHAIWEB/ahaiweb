@@ -83,48 +83,67 @@ const UrlPost = () => {
     setLoading(true);
 
     try {
-      const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
+      let postId = editId;
 
-      const { data: post, error: postError } = await supabase.from("posts").insert({
-        user_id: user.id,
-        title: title.trim(),
-        slug,
-        content: content.trim(),
-        excerpt: content.trim().substring(0, 150),
-        featured_image: imageUrl || null,
-        source_url: sourceUrl.trim(),
-        source_name: sourceName.trim() || null,
-        category_id: selectedCategories[0] || null,
-        post_type: "url" as const,
-        status,
-        published_at: status === "published" ? new Date().toISOString() : null,
-      }).select().single();
+      if (editId) {
+        const { error } = await supabase.from("posts").update({
+          title: title.trim(),
+          content: content.trim(),
+          excerpt: content.trim().substring(0, 150),
+          featured_image: imageUrl || null,
+          source_url: sourceUrl.trim(),
+          source_name: sourceName.trim() || null,
+          category_id: selectedCategories[0] || null,
+          status,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        }).eq("id", editId);
+        if (error) throw error;
 
-      if (postError) throw postError;
+        await supabase.from("post_tags").delete().eq("post_id", editId);
+        await supabase.from("post_categories").delete().eq("post_id", editId);
+        await supabase.from("post_locations").delete().eq("post_id", editId);
+      } else {
+        const slug = title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, "-") + "-" + Date.now();
+        const { data: post, error: postError } = await supabase.from("posts").insert({
+          user_id: user.id,
+          title: title.trim(),
+          slug,
+          content: content.trim(),
+          excerpt: content.trim().substring(0, 150),
+          featured_image: imageUrl || null,
+          source_url: sourceUrl.trim(),
+          source_name: sourceName.trim() || null,
+          category_id: selectedCategories[0] || null,
+          post_type: "url" as const,
+          status,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        }).select().single();
+        if (postError) throw postError;
+        postId = post.id;
+      }
 
-      // Save multiple categories
-      if (selectedCategories.length > 0) {
+      if (selectedCategories.length > 0 && postId) {
         await supabase.from("post_categories").insert(
-          selectedCategories.map((catId) => ({ post_id: post.id, category_id: catId }))
+          selectedCategories.map((catId) => ({ post_id: postId!, category_id: catId }))
         );
       }
 
-      if (selectedTags.length > 0) {
+      if (selectedTags.length > 0 && postId) {
         await supabase.from("post_tags").insert(
-          selectedTags.map((tagId) => ({ post_id: post.id, tag_id: tagId }))
+          selectedTags.map((tagId) => ({ post_id: postId!, tag_id: tagId }))
         );
       }
 
-      if (selectedDivision) {
+      if (selectedDivision && postId) {
         await supabase.from("post_locations").insert({
-          post_id: post.id,
+          post_id: postId,
           division_id: selectedDivision || null,
           district_id: selectedDistrict || null,
           upazila_id: selectedUpazila || null,
         });
       }
 
-      toast({ title: "সফল!", description: "URL পোস্ট তৈরি হয়েছে" });
+      toast({ title: "সফল!", description: editId ? "পোস্ট আপডেট হয়েছে" : "URL পোস্ট তৈরি হয়েছে" });
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
       navigate("/admin/posts");
     } catch (err: any) {
