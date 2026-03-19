@@ -175,7 +175,7 @@ const EditorPost = () => {
         }
       }
 
-      toast({ title: "সফল!", description: status === "published" ? "পোস্ট প্রকাশিত!" : "ড্রাফট সেভ!" });
+      toast({ title: "সফল!", description: editId ? "পোস্ট আপডেট হয়েছে!" : (status === "published" ? "পোস্ট প্রকাশিত!" : "ড্রাফট সেভ!") });
       queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
       navigate("/admin/posts");
     } catch (err: any) {
@@ -187,7 +187,7 @@ const EditorPost = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      <h2 className="text-2xl font-bold">এডিটর পোস্ট</h2>
+      <h2 className="text-2xl font-bold">{editId ? "এডিটর পোস্ট এডিট" : "এডিটর পোস্ট"}</h2>
 
       <Card>
         <CardContent className="p-5 space-y-4">
