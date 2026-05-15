@@ -129,6 +129,36 @@ export type Database = {
         }
         Relationships: []
       }
+      historical_events: {
+        Row: {
+          category: string
+          created_at: string
+          event: string
+          event_date: string
+          id: string
+          source_url: string | null
+          year: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          event: string
+          event_date: string
+          id?: string
+          source_url?: string | null
+          year?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          event?: string
+          event_date?: string
+          id?: string
+          source_url?: string | null
+          year?: string | null
+        }
+        Relationships: []
+      }
       media: {
         Row: {
           caption: string | null
@@ -427,6 +457,36 @@ export type Database = {
           user_id?: string
           website?: string | null
           youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      quotes_pool: {
+        Row: {
+          author: string | null
+          category: string | null
+          created_at: string
+          id: string
+          source_name: string | null
+          source_url: string | null
+          text: string
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          source_name?: string | null
+          source_url?: string | null
+          text: string
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          source_name?: string | null
+          source_url?: string | null
+          text?: string
         }
         Relationships: []
       }
