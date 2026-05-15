@@ -18,7 +18,9 @@ import ProfileEdit from "./pages/admin/ProfileEdit";
 import CategoryManager from "./pages/admin/CategoryManager";
 import RssFeedManager from "./pages/admin/RssFeedManager";
 import SiteCustomizer from "./pages/admin/SiteCustomizer";
+import ScraperHub from "./pages/admin/ScraperHub";
 import PostDetail from "./pages/PostDetail";
+import CardMaker from "./pages/CardMaker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,8 +47,10 @@ const App = () => (
               <Route path="categories" element={<CategoryManager />} />
               <Route path="rss-feeds" element={<RssFeedManager />} />
               <Route path="site-customizer" element={<SiteCustomizer />} />
+              <Route path="scrapers" element={<ScraperHub />} />
             </Route>
             <Route path="/post/:slug" element={<PostDetail />} />
+            <Route path="/card-maker" element={<CardMaker />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

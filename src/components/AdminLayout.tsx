@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen, Rss, Settings2,
+  LayoutDashboard, FileText, PlusCircle, Link2, Image, LogOut, Home, Menu, X, Tag, User, FolderOpen, Rss, Settings2, Bug,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -17,6 +17,7 @@ const navItems = [
   { label: "ক্যাটেগরি", icon: FolderOpen, path: "/admin/categories" },
   { label: "RSS ফিড", icon: Rss, path: "/admin/rss-feeds" },
   { label: "সাইট কাস্টমাইজ", icon: Settings2, path: "/admin/site-customizer" },
+  { label: "স্ক্র্যাপার হাব", icon: Bug, path: "/admin/scrapers" },
   { label: "প্রোফাইল", icon: User, path: "/admin/profile" },
 ];
 

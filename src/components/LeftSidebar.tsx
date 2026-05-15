@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Star, Quote, TrendingUp, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, Star, Quote, TrendingUp, Clock, ImagePlus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -52,6 +54,26 @@ const LeftSidebar = () => {
   const quoteData = dailyContent?.find((d: any) => d.content_type === "quote")?.data as any;
   const todayQuote = quoteData?.text ? quoteData : fallbackQuotes[today.getDate() % fallbackQuotes.length];
   const selectedHoroscope = horoscope?.signs?.find((s: any) => s.name === selectedSign);
+
+  // Fallback to historical_events table when daily_content has no on_this_day
+  const mmdd = `${String(bdtDate.getMonth() + 1).padStart(2, '0')}-${String(bdtDate.getDate()).padStart(2, '0')}`;
+  const { data: histEvents } = useQuery({
+    queryKey: ["hist-events", mmdd],
+    queryFn: async () => {
+      const { data } = await supabase.from("historical_events")
+        .select("year, event, category")
+        .eq("event_date", mmdd)
+        .eq("category", "event")
+        .order("year", { ascending: true })
+        .limit(20);
+      return (data || []) as { year: string; event: string }[];
+    },
+  });
+
+  const timelineEvents: { year: string; event: string }[] =
+    onThisDay?.events?.length ? onThisDay.events : (histEvents || []);
+  const cardMakerHref =
+    `/card-maker?title=${encodeURIComponent("ইতিহাসে আজ")}&events=${encodeURIComponent(JSON.stringify(timelineEvents.slice(0, 8)))}`;
 
   const { data: recentPosts } = useQuery({
     queryKey: ["sidebar-recent"],
@@ -115,26 +137,54 @@ const LeftSidebar = () => {
                 </TabsList>
                 <TabsContent value="today" className="mt-3">
                   <p className="text-sm font-medium text-foreground">{todayBn}</p>
-                  <div className="mt-3 space-y-3">
-                    {onThisDay?.events?.length ? (
-                      onThisDay.events.map((e: any, i: number) => (
-                        <div key={i} className="border-l-2 border-accent pl-3">
-                          <p className="text-xs text-muted-foreground">{e.year}</p>
-                          <p className="text-sm">{e.event}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        <div className="border-l-2 border-accent pl-3">
-                          <p className="text-xs text-muted-foreground">১৯৭১</p>
-                          <p className="text-sm">স্বাধীনতা যুদ্ধের ঘটনা...</p>
-                        </div>
-                        <div className="border-l-2 border-accent pl-3">
-                          <p className="text-xs text-muted-foreground">১৯৫২</p>
-                          <p className="text-sm">ভাষা আন্দোলনের ইতিহাস...</p>
-                        </div>
-                      </>
-                    )}
+
+                  {/* Timeline glow card */}
+                  <div
+                    className="relative mt-3 overflow-hidden rounded-xl p-4 text-white"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(240 60% 14%) 0%, hsl(280 50% 17%) 60%, hsl(220 70% 12%) 100%)",
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-25 pointer-events-none"
+                      style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)", backgroundSize: "14px 14px" }}
+                    />
+                    <div
+                      className="absolute -top-12 -right-12 w-44 h-44 rounded-full pointer-events-none"
+                      style={{ background: "radial-gradient(circle, rgba(255,180,80,0.35), transparent 70%)" }}
+                    />
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-bold tracking-wide">📜 ইতিহাসে আজ</h4>
+                      </div>
+
+                      <div className="relative pl-5 border-l-2 border-dashed border-white/30 space-y-3 max-h-72 overflow-auto pr-1">
+                        {timelineEvents.length ? (
+                          timelineEvents.slice(0, 8).map((e, i) => (
+                            <div key={i} className="relative">
+                              <div
+                                className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-amber-400"
+                                style={{ boxShadow: "0 0 10px rgba(255,180,80,0.9)" }}
+                              />
+                              <div className="flex gap-2">
+                                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 h-fit whitespace-nowrap">
+                                  {e.year || "—"}
+                                </span>
+                                <p className="text-xs leading-relaxed">{e.event}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs opacity-70">কোনো ঘটনা পাওয়া যায়নি — অ্যাডমিন → স্ক্র্যাপার থেকে ইম্পোর্ট করুন।</p>
+                        )}
+                      </div>
+
+                      {timelineEvents.length > 0 && (
+                        <Button asChild size="sm" className="mt-3 w-full bg-amber-400 hover:bg-amber-500 text-black h-8 text-xs">
+                          <Link to={cardMakerHref}><ImagePlus className="h-3 w-3" /> কার্ড তৈরি করুন</Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </TabsContent>
                 <TabsContent value="horoscope" className="mt-3">
