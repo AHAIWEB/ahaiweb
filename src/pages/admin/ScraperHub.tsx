@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, UserCircle2, CalendarRange, Quote } from "lucide-react";
+import { Loader2, UserCircle2, CalendarRange, Quote, Link2, Download } from "lucide-react";
+import { generateBloggerTheme, generateBloggerAtomExport, downloadFile } from "@/lib/bloggerExport";
 
 const QUOTE_SOURCES = [
   { url: "https://www.bani.com.bd/", name: "bani.com.bd" },
@@ -18,6 +21,7 @@ const QUOTE_SOURCES = [
 ];
 
 export default function ScraperHub() {
+  const { user } = useAuth();
   const [personUrls, setPersonUrls] = useState("");
   const [personLoading, setPersonLoading] = useState(false);
   const [personLog, setPersonLog] = useState<any[]>([]);
@@ -28,6 +32,64 @@ export default function ScraperHub() {
   const [selectedSources, setSelectedSources] = useState<string[]>(QUOTE_SOURCES.map((s) => s.url));
   const [quotesLoading, setQuotesLoading] = useState(false);
   const [quotesLog, setQuotesLog] = useState<any>(null);
+
+  // Smart URL scraper state
+  const [smartUrls, setSmartUrls] = useState("");
+  const [smartLoading, setSmartLoading] = useState(false);
+  const [smartLog, setSmartLog] = useState<any[]>([]);
+
+  // Blogger export state
+  const [bloggerTitle, setBloggerTitle] = useState("AHAiWEB");
+  const [bloggerDesc, setBloggerDesc] = useState("Personal Blog · News portal + Creative");
+  const [bloggerPrimary, setBloggerPrimary] = useState("#dc2626");
+  const [exportingPosts, setExportingPosts] = useState(false);
+
+  const runSmart = async () => {
+    const urls = smartUrls.split(/[👉\n,]+/).map((s) => s.trim()).filter((s) => s.startsWith("http"));
+    if (!urls.length) { toast({ title: "URL দিন", variant: "destructive" }); return; }
+    setSmartLoading(true);
+    setSmartLog([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-url", {
+        body: { urls, user_id: user?.id },
+      });
+      if (error) throw error;
+      setSmartLog(data.results || []);
+      toast({ title: `সম্পন্ন: ${data.ok}/${data.total}` });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setSmartLoading(false);
+    }
+  };
+
+  const downloadTheme = () => {
+    const xml = generateBloggerTheme({
+      title: bloggerTitle, description: bloggerDesc, primaryColor: bloggerPrimary,
+    });
+    downloadFile(`${bloggerTitle.toLowerCase().replace(/\s+/g, "-")}-blogger-theme.xml`, xml);
+    toast({ title: "Blogger theme ডাউনলোড শুরু" });
+  };
+
+  const exportPosts = async () => {
+    setExportingPosts(true);
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id,title,content,excerpt,published_at,created_at,slug,featured_image")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      const xml = generateBloggerAtomExport(data || [], bloggerTitle);
+      downloadFile(`${bloggerTitle.toLowerCase().replace(/\s+/g, "-")}-posts-export.xml`, xml);
+      toast({ title: `${data?.length || 0} পোস্ট এক্সপোর্ট হয়েছে` });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setExportingPosts(false);
+    }
+  };
 
   const runPersons = async () => {
     const urls = personUrls.split(/[👉\n,]+/).map((s) => s.trim()).filter((s) => s.startsWith("http"));
@@ -85,12 +147,50 @@ export default function ScraperHub() {
         <p className="text-sm text-muted-foreground">বাল্ক কন্টেন্ট ফেচ — উইকিপিডিয়া পিপল, ইতিহাসে আজ, উক্তি</p>
       </div>
 
-      <Tabs defaultValue="people" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full">
+      <Tabs defaultValue="smart" className="w-full">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="smart"><Link2 className="h-4 w-4 mr-1" /> URL</TabsTrigger>
           <TabsTrigger value="people"><UserCircle2 className="h-4 w-4 mr-1" /> পিপল</TabsTrigger>
           <TabsTrigger value="events"><CalendarRange className="h-4 w-4 mr-1" /> এই দিনে</TabsTrigger>
           <TabsTrigger value="quotes"><Quote className="h-4 w-4 mr-1" /> উক্তি</TabsTrigger>
+          <TabsTrigger value="blogger"><Download className="h-4 w-4 mr-1" /> Blogger</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="smart">
+          <Card>
+            <CardHeader>
+              <CardTitle>স্মার্ট URL স্ক্র্যাপার</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                যেকোনো URL — অটো-রাউটিং: <code>bani.com.bd/author/*</code> → quotes_pool · <code>wikipedia.org</code> + অন্যান্য → posts
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                rows={8}
+                value={smartUrls}
+                onChange={(e) => setSmartUrls(e.target.value)}
+                placeholder="http://bani.com.bd/author/184&#10;http://bani.com.bd/author/68&#10;https://example.com/article"
+                className="font-mono text-xs"
+              />
+              <Button onClick={runSmart} disabled={smartLoading}>
+                {smartLoading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                ফেচ ও সেভ
+              </Button>
+              {smartLog.length > 0 && (
+                <div className="border rounded-md p-3 max-h-80 overflow-auto text-xs space-y-1">
+                  {smartLog.map((r, i) => (
+                    <div key={i} className={r.ok ? "text-green-600" : "text-destructive"}>
+                      {r.ok ? "✓" : "✗"} <span className="font-mono">[{r.type}]</span>{" "}
+                      {r.author ? `${r.author} — ${r.inserted}/${r.found} quotes` : (r.title || r.url)}
+                      {r.updated && " (আপডেট)"}
+                      {r.error && ` — ${r.error}`}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="people">
           <Card>
@@ -187,6 +287,47 @@ export default function ScraperHub() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="blogger">
+          <Card>
+            <CardHeader>
+              <CardTitle>Blogger Theme XML এক্সপোর্ট</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                সাইটের লেআউট/স্টাইল অনুযায়ী Blogger XML থিম জেনারেট করো। আলাদা বাটনে পোস্টগুলোও Blogger Atom XML হিসেবে ডাউনলোড।
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-medium">Blog Title</label>
+                  <Input value={bloggerTitle} onChange={(e) => setBloggerTitle(e.target.value)} />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs font-medium">Description</label>
+                  <Input value={bloggerDesc} onChange={(e) => setBloggerDesc(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Primary Color</label>
+                  <Input type="color" value={bloggerPrimary} onChange={(e) => setBloggerPrimary(e.target.value)} className="h-10 p-1" />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button onClick={downloadTheme}>
+                  <Download className="h-4 w-4 mr-1" /> Theme XML ডাউনলোড
+                </Button>
+                <Button onClick={exportPosts} disabled={exportingPosts} variant="outline">
+                  {exportingPosts && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                  পোস্ট Atom XML এক্সপোর্ট
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+                <p className="font-semibold">কীভাবে ব্যবহার করবেন:</p>
+                <p>১. Blogger Dashboard → Theme → Backup/Restore → "Restore" → theme XML ফাইল আপলোড।</p>
+                <p>২. পোস্ট Import: Blogger → Settings → Import &amp; back up → Import content → Atom XML ফাইল আপলোড।</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
