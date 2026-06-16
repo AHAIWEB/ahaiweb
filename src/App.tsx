@@ -21,6 +21,9 @@ import SiteCustomizer from "./pages/admin/SiteCustomizer";
 import ScraperHub from "./pages/admin/ScraperHub";
 import PostDetail from "./pages/PostDetail";
 import CardMaker from "./pages/CardMaker";
+import Dictionary from "./pages/Dictionary";
+import Library from "./pages/Library";
+import EbookReader from "./pages/EbookReader";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +54,9 @@ const App = () => (
             </Route>
             <Route path="/post/:slug" element={<PostDetail />} />
             <Route path="/card-maker" element={<CardMaker />} />
+            <Route path="/dictionary" element={<Dictionary />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/library/:id" element={<EbookReader />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,4 +1,4 @@
-import { Search, Bell, Moon, Sun, Menu, Settings, LogIn, Home, CalendarDays, Star, Quote, ChevronDown } from "lucide-react";
+import { Search, Bell, Moon, Sun, Menu, Settings, LogIn, Home, CalendarDays, Star, Quote, ChevronDown, BookOpen, Library as LibraryIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -20,7 +20,7 @@ const zodiacSigns = [
 const Header = () => {
   const [isDark, setIsDark] = useState(false);
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
-  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
+  
   const { user } = useAuth();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -129,42 +129,44 @@ const Header = () => {
             const children = getChildren(cat.id);
             if (children.length > 0) {
               return (
-                <div
-                  key={cat.id}
-                  className="relative shrink-0"
-                  onMouseEnter={() => setHoveredCat(cat.id)}
-                  onMouseLeave={() => setHoveredCat(null)}
-                >
-                  <Button 
-                    variant={activeCategory === cat.slug ? "default" : "ghost"} 
-                    size="sm" 
-                    className="h-7 text-xs rounded-full gap-1"
-                    onClick={() => setSearchParams({ category: cat.slug })}
-                  >
-                    {cat.icon} {cat.name} <ChevronDown className="h-3 w-3" />
-                  </Button>
-                  {hoveredCat === cat.id && (
-                    <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+                <Popover key={cat.id}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={activeCategory === cat.slug ? "default" : "ghost"}
+                      size="sm"
+                      className="shrink-0 h-7 text-xs rounded-full gap-1"
+                    >
+                      {cat.icon} {cat.name} <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-[min(560px,90vw)] p-3">
+                    <button
+                      className="w-full text-left mb-2 px-2 py-1 rounded hover:bg-muted text-xs font-bold"
+                      onClick={() => setSearchParams({ category: cat.slug })}
+                    >
+                      সব {cat.name} →
+                    </button>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 max-h-[60vh] overflow-y-auto">
                       {children.map((child: any) => (
                         <button
                           key={child.id}
-                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors flex items-center gap-2"
-                          onClick={() => { setSearchParams({ category: child.slug }); setHoveredCat(null); }}
+                          className="text-left px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors flex items-center gap-2"
+                          onClick={() => setSearchParams({ category: child.slug })}
                         >
                           {child.icon && <span>{child.icon}</span>}
-                          {child.name}
+                          <span className="truncate">{child.name}</span>
                         </button>
                       ))}
                     </div>
-                  )}
-                </div>
+                  </PopoverContent>
+                </Popover>
               );
             }
             return (
-              <Button 
-                key={cat.id} 
-                variant={activeCategory === cat.slug ? "default" : "ghost"} 
-                size="sm" 
+              <Button
+                key={cat.id}
+                variant={activeCategory === cat.slug ? "default" : "ghost"}
+                size="sm"
                 className="shrink-0 h-7 text-xs rounded-full"
                 onClick={() => setSearchParams({ category: cat.slug })}
               >
@@ -172,6 +174,14 @@ const Header = () => {
               </Button>
             );
           })}
+
+          <Button variant="ghost" size="sm" className="shrink-0 h-7 text-xs rounded-full gap-1" asChild>
+            <Link to="/dictionary"><BookOpen className="h-3 w-3" /> অভিধান</Link>
+          </Button>
+          <Button variant="ghost" size="sm" className="shrink-0 h-7 text-xs rounded-full gap-1" asChild>
+            <Link to="/library"><LibraryIcon className="h-3 w-3" /> লাইব্রেরি</Link>
+          </Button>
+
 
           {/* আজকের দিনে Dropdown */}
           <Popover>
