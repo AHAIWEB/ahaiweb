@@ -21,6 +21,7 @@ const QUOTE_SOURCES = [
 ];
 
 export default function ScraperHub() {
+  const { user } = useAuth();
   const [personUrls, setPersonUrls] = useState("");
   const [personLoading, setPersonLoading] = useState(false);
   const [personLog, setPersonLog] = useState<any[]>([]);
@@ -31,6 +32,64 @@ export default function ScraperHub() {
   const [selectedSources, setSelectedSources] = useState<string[]>(QUOTE_SOURCES.map((s) => s.url));
   const [quotesLoading, setQuotesLoading] = useState(false);
   const [quotesLog, setQuotesLog] = useState<any>(null);
+
+  // Smart URL scraper state
+  const [smartUrls, setSmartUrls] = useState("");
+  const [smartLoading, setSmartLoading] = useState(false);
+  const [smartLog, setSmartLog] = useState<any[]>([]);
+
+  // Blogger export state
+  const [bloggerTitle, setBloggerTitle] = useState("AHAiWEB");
+  const [bloggerDesc, setBloggerDesc] = useState("Personal Blog · News portal + Creative");
+  const [bloggerPrimary, setBloggerPrimary] = useState("#dc2626");
+  const [exportingPosts, setExportingPosts] = useState(false);
+
+  const runSmart = async () => {
+    const urls = smartUrls.split(/[👉\n,]+/).map((s) => s.trim()).filter((s) => s.startsWith("http"));
+    if (!urls.length) { toast({ title: "URL দিন", variant: "destructive" }); return; }
+    setSmartLoading(true);
+    setSmartLog([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-url", {
+        body: { urls, user_id: user?.id },
+      });
+      if (error) throw error;
+      setSmartLog(data.results || []);
+      toast({ title: `সম্পন্ন: ${data.ok}/${data.total}` });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setSmartLoading(false);
+    }
+  };
+
+  const downloadTheme = () => {
+    const xml = generateBloggerTheme({
+      title: bloggerTitle, description: bloggerDesc, primaryColor: bloggerPrimary,
+    });
+    downloadFile(`${bloggerTitle.toLowerCase().replace(/\s+/g, "-")}-blogger-theme.xml`, xml);
+    toast({ title: "Blogger theme ডাউনলোড শুরু" });
+  };
+
+  const exportPosts = async () => {
+    setExportingPosts(true);
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id,title,content,excerpt,published_at,created_at,slug,featured_image")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      const xml = generateBloggerAtomExport(data || [], bloggerTitle);
+      downloadFile(`${bloggerTitle.toLowerCase().replace(/\s+/g, "-")}-posts-export.xml`, xml);
+      toast({ title: `${data?.length || 0} পোস্ট এক্সপোর্ট হয়েছে` });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setExportingPosts(false);
+    }
+  };
 
   const runPersons = async () => {
     const urls = personUrls.split(/[👉\n,]+/).map((s) => s.trim()).filter((s) => s.startsWith("http"));
