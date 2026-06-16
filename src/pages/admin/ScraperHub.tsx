@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, UserCircle2, CalendarRange, Quote } from "lucide-react";
+import { Loader2, UserCircle2, CalendarRange, Quote, Link2, Download } from "lucide-react";
+import { generateBloggerTheme, generateBloggerAtomExport, downloadFile } from "@/lib/bloggerExport";
 
 const QUOTE_SOURCES = [
   { url: "https://www.bani.com.bd/", name: "bani.com.bd" },
