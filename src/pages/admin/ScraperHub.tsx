@@ -290,7 +290,6 @@ export default function ScraperHub() {
             </CardContent>
           </Card>
         </TabsContent>
-        </TabsContent>
 
         <TabsContent value="blogger">
           <Card>
