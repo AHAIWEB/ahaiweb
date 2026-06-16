@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, UserCircle2, CalendarRange, Quote, Link2, Download } from "lucide-react";
+import { Loader2, UserCircle2, CalendarRange, Quote, Link2, Download, BookOpen } from "lucide-react";
 import { generateBloggerTheme, generateBloggerAtomExport, downloadFile } from "@/lib/bloggerExport";
 
 const QUOTE_SOURCES = [
@@ -43,6 +43,28 @@ export default function ScraperHub() {
   const [bloggerDesc, setBloggerDesc] = useState("Personal Blog · News portal + Creative");
   const [bloggerPrimary, setBloggerPrimary] = useState("#dc2626");
   const [exportingPosts, setExportingPosts] = useState(false);
+
+  // Dictionary scraper state
+  const [dictUrls, setDictUrls] = useState("https://www.bangladict.net/");
+  const [dictLoading, setDictLoading] = useState(false);
+  const [dictLog, setDictLog] = useState<any>(null);
+
+  const runDict = async () => {
+    const urls = dictUrls.split(/[👉\n,]+/).map((s) => s.trim()).filter((s) => s.startsWith("http"));
+    if (!urls.length) { toast({ title: "URL দিন", variant: "destructive" }); return; }
+    setDictLoading(true);
+    setDictLog(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-dictionary", { body: { urls } });
+      if (error) throw error;
+      setDictLog(data);
+      toast({ title: `+${data.total_saved} শব্দ যুক্ত` });
+    } catch (e: any) {
+      toast({ title: "ত্রুটি", description: e.message, variant: "destructive" });
+    } finally {
+      setDictLoading(false);
+    }
+  };
 
   const runSmart = async () => {
     const urls = smartUrls.split(/[👉\n,]+/).map((s) => s.trim()).filter((s) => s.startsWith("http"));
@@ -148,11 +170,12 @@ export default function ScraperHub() {
       </div>
 
       <Tabs defaultValue="smart" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="smart"><Link2 className="h-4 w-4 mr-1" /> URL</TabsTrigger>
           <TabsTrigger value="people"><UserCircle2 className="h-4 w-4 mr-1" /> পিপল</TabsTrigger>
           <TabsTrigger value="events"><CalendarRange className="h-4 w-4 mr-1" /> এই দিনে</TabsTrigger>
           <TabsTrigger value="quotes"><Quote className="h-4 w-4 mr-1" /> উক্তি</TabsTrigger>
+          <TabsTrigger value="dict"><BookOpen className="h-4 w-4 mr-1" /> অভিধান</TabsTrigger>
           <TabsTrigger value="blogger"><Download className="h-4 w-4 mr-1" /> Blogger</TabsTrigger>
         </TabsList>
 
@@ -284,6 +307,41 @@ export default function ScraperHub() {
                   <div className="font-semibold">+{quotesLog.inserted} নতুন উক্তি</div>
                   {quotesLog.log?.map((l: any, i: number) => (
                     <div key={i}>{l.url} — {l.error ? `ERR ${l.error}` : `${l.inserted}/${l.found}`}</div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="dict">
+          <Card>
+            <CardHeader>
+              <CardTitle>অভিধান স্ক্র্যাপার</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                bangladict.net বা যেকোনো শব্দার্থ পেজের URL — অটো-পার্সিং (h2 + অর্থ, dl/dt/dd, table)। ডুপ্লিকেট স্কিপ।
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                rows={6}
+                value={dictUrls}
+                onChange={(e) => setDictUrls(e.target.value)}
+                placeholder="https://www.bangladict.net/&#10;https://www.bangladict.net/dictionary/a"
+                className="font-mono text-xs"
+              />
+              <Button onClick={runDict} disabled={dictLoading}>
+                {dictLoading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                ফেচ ও সেভ
+              </Button>
+              {dictLog && (
+                <div className="border rounded-md p-3 text-xs space-y-1 max-h-72 overflow-auto">
+                  <div className="font-semibold">+{dictLog.total_saved} শব্দ সেভ হয়েছে</div>
+                  {Object.entries(dictLog.per_url || {}).map(([u, n]: any) => (
+                    <div key={u}>{u} — {n} শব্দ</div>
+                  ))}
+                  {dictLog.errors?.map((e: string, i: number) => (
+                    <div key={i} className="text-destructive">{e}</div>
                   ))}
                 </div>
               )}

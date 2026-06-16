@@ -82,6 +82,63 @@ export type Database = {
         }
         Relationships: []
       }
+      dictionary_words: {
+        Row: {
+          antonyms: string[] | null
+          created_at: string
+          example: string | null
+          extra: Json | null
+          id: string
+          language: string
+          meaning_bn: string | null
+          meaning_en: string | null
+          part_of_speech: string | null
+          pronunciation: string | null
+          source_name: string | null
+          source_url: string | null
+          synonyms: string[] | null
+          updated_at: string
+          word: string
+          word_normalized: string
+        }
+        Insert: {
+          antonyms?: string[] | null
+          created_at?: string
+          example?: string | null
+          extra?: Json | null
+          id?: string
+          language?: string
+          meaning_bn?: string | null
+          meaning_en?: string | null
+          part_of_speech?: string | null
+          pronunciation?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          synonyms?: string[] | null
+          updated_at?: string
+          word: string
+          word_normalized: string
+        }
+        Update: {
+          antonyms?: string[] | null
+          created_at?: string
+          example?: string | null
+          extra?: Json | null
+          id?: string
+          language?: string
+          meaning_bn?: string | null
+          meaning_en?: string | null
+          part_of_speech?: string | null
+          pronunciation?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          synonyms?: string[] | null
+          updated_at?: string
+          word?: string
+          word_normalized?: string
+        }
+        Relationships: []
+      }
       districts: {
         Row: {
           bn_name: string
@@ -126,6 +183,63 @@ export type Database = {
           bn_name?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      ebooks: {
+        Row: {
+          author: string | null
+          category: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          download_count: number
+          file_size: number | null
+          id: string
+          is_public: boolean
+          language: string | null
+          pages: number | null
+          pdf_url: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_size?: number | null
+          id?: string
+          is_public?: boolean
+          language?: string | null
+          pages?: number | null
+          pdf_url: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_size?: number | null
+          id?: string
+          is_public?: boolean
+          language?: string | null
+          pages?: number | null
+          pdf_url?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -698,12 +812,45 @@ export type Database = {
           },
         ]
       }
+      user_favorite_words: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          user_id: string
+          word_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          user_id: string
+          word_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+          word_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_words_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "dictionary_words"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
