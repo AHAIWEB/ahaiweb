@@ -147,12 +147,50 @@ export default function ScraperHub() {
         <p className="text-sm text-muted-foreground">বাল্ক কন্টেন্ট ফেচ — উইকিপিডিয়া পিপল, ইতিহাসে আজ, উক্তি</p>
       </div>
 
-      <Tabs defaultValue="people" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full">
+      <Tabs defaultValue="smart" className="w-full">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="smart"><Link2 className="h-4 w-4 mr-1" /> URL</TabsTrigger>
           <TabsTrigger value="people"><UserCircle2 className="h-4 w-4 mr-1" /> পিপল</TabsTrigger>
           <TabsTrigger value="events"><CalendarRange className="h-4 w-4 mr-1" /> এই দিনে</TabsTrigger>
           <TabsTrigger value="quotes"><Quote className="h-4 w-4 mr-1" /> উক্তি</TabsTrigger>
+          <TabsTrigger value="blogger"><Download className="h-4 w-4 mr-1" /> Blogger</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="smart">
+          <Card>
+            <CardHeader>
+              <CardTitle>স্মার্ট URL স্ক্র্যাপার</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                যেকোনো URL — অটো-রাউটিং: <code>bani.com.bd/author/*</code> → quotes_pool · <code>wikipedia.org</code> + অন্যান্য → posts
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                rows={8}
+                value={smartUrls}
+                onChange={(e) => setSmartUrls(e.target.value)}
+                placeholder="http://bani.com.bd/author/184&#10;http://bani.com.bd/author/68&#10;https://example.com/article"
+                className="font-mono text-xs"
+              />
+              <Button onClick={runSmart} disabled={smartLoading}>
+                {smartLoading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                ফেচ ও সেভ
+              </Button>
+              {smartLog.length > 0 && (
+                <div className="border rounded-md p-3 max-h-80 overflow-auto text-xs space-y-1">
+                  {smartLog.map((r, i) => (
+                    <div key={i} className={r.ok ? "text-green-600" : "text-destructive"}>
+                      {r.ok ? "✓" : "✗"} <span className="font-mono">[{r.type}]</span>{" "}
+                      {r.author ? `${r.author} — ${r.inserted}/${r.found} quotes` : (r.title || r.url)}
+                      {r.updated && " (আপডেট)"}
+                      {r.error && ` — ${r.error}`}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="people">
           <Card>
