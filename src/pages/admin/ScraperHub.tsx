@@ -290,6 +290,48 @@ export default function ScraperHub() {
             </CardContent>
           </Card>
         </TabsContent>
+        </TabsContent>
+
+        <TabsContent value="blogger">
+          <Card>
+            <CardHeader>
+              <CardTitle>Blogger Theme XML এক্সপোর্ট</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                সাইটের লেআউট/স্টাইল অনুযায়ী Blogger XML থিম জেনারেট করো। আলাদা বাটনে পোস্টগুলোও Blogger Atom XML হিসেবে ডাউনলোড।
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-medium">Blog Title</label>
+                  <Input value={bloggerTitle} onChange={(e) => setBloggerTitle(e.target.value)} />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs font-medium">Description</label>
+                  <Input value={bloggerDesc} onChange={(e) => setBloggerDesc(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Primary Color</label>
+                  <Input type="color" value={bloggerPrimary} onChange={(e) => setBloggerPrimary(e.target.value)} className="h-10 p-1" />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button onClick={downloadTheme}>
+                  <Download className="h-4 w-4 mr-1" /> Theme XML ডাউনলোড
+                </Button>
+                <Button onClick={exportPosts} disabled={exportingPosts} variant="outline">
+                  {exportingPosts && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                  পোস্ট Atom XML এক্সপোর্ট
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+                <p className="font-semibold">কীভাবে ব্যবহার করবেন:</p>
+                <p>১. Blogger Dashboard → Theme → Backup/Restore → "Restore" → theme XML ফাইল আপলোড।</p>
+                <p>২. পোস্ট Import: Blogger → Settings → Import &amp; back up → Import content → Atom XML ফাইল আপলোড।</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
