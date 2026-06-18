@@ -103,13 +103,16 @@ const Login = () => {
               {loading ? "অপেক্ষা করুন..." : isSignUp ? "সাইন আপ" : "লগইন"}
             </Button>
           </form>
-          <Button
-            variant="link"
-            className="w-full text-sm"
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
-            {isSignUp ? "আগে থেকে অ্যাকাউন্ট আছে? লগইন করুন" : "নতুন অ্যাকাউন্ট তৈরি করুন"}
-          </Button>
+          <div className="flex flex-col items-center gap-1">
+            <Button variant="link" className="text-sm" onClick={() => setIsSignUp(!isSignUp)}>
+              {isSignUp ? "আগে থেকে অ্যাকাউন্ট আছে? লগইন করুন" : "নতুন অ্যাকাউন্ট তৈরি করুন"}
+            </Button>
+            {!isSignUp && (
+              <a href="/forgot-password" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+                পাসওয়ার্ড ভুলে গেছেন?
+              </a>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
